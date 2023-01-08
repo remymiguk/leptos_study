@@ -1,4 +1,8 @@
+use crate::app::state::AppState;
+use crate::app::state::StateGetter;
+use crate::app::state::StateSetter;
 use crate::routes::home::*;
+use crate::routes::login::*;
 use crate::routes::nav::*;
 use crate::routes::product_form::*;
 use crate::routes::products::*;
@@ -9,6 +13,12 @@ use leptos_router::*;
 #[component]
 pub fn App(cx: Scope) -> impl IntoView {
     provide_meta_context(cx);
+
+    let (app_state, set_app_state) = create_signal(cx, AppState::default());
+
+    provide_context(cx, StateSetter(set_app_state));
+    provide_context(cx, StateGetter(app_state));
+
     view! {
         cx,
         <>
@@ -31,6 +41,7 @@ pub fn App(cx: Scope) -> impl IntoView {
                         <main>
                             <Routes>
                                 <Route path="/" view=|cx| view! { cx,  <Home/> }/>
+                                <Route path="login" view=|cx| view! { cx,  <Login/> }/>
                                 <Route path="products" view=|cx| view! { cx,  <Products/> }/>
                                 <Route path="products/:id" view=|cx| view! { cx,  <ProductForm/> }/>
                             </Routes>
