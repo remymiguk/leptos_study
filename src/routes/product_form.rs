@@ -1,7 +1,8 @@
-use crate::{api, models::product::Product};
+use crate::{app::repository::product_repository, models::product::Product};
 use leptos::*;
 use leptos_meta::*;
-use leptos_router::*;
+use leptos_router::use_params_map;
+use uuid::Uuid;
 
 #[component]
 pub fn ProductForm(cx: Scope) -> impl IntoView {
@@ -13,14 +14,20 @@ pub fn ProductForm(cx: Scope) -> impl IntoView {
             if id.is_empty() {
                 None
             } else {
-                api::fetch_api::<Product>(cx, &api::products(&format!("/{id}"))).await
+                product_repository()
+                    .read(cx, id.parse::<Uuid>().unwrap())
+                    .await
+                    .map_err(|e| error!("{e}"))
+                    .ok()
+                    .flatten()
             }
         },
     );
+
     let meta_description = move || {
         product
             .read()
-            .and_then(|product| product.map(|product| product.description.clone()))
+            .and_then(|product| product.map(|product| product.description))
             .unwrap_or_else(|| "Loading story...".to_string())
     };
 
@@ -51,12 +58,15 @@ pub fn LoadedProductForm(cx: Scope, product: Product) -> impl IntoView {
     view! { cx,
         <div>
             <div>{ "id" }</div>
-            <div>{product.id.to_string()}</div>
+            <input class="input is-primary" type="text" placeholder="Primary input" value={product.id.to_string()}/>
             <div>{ "Description" }</div>
-            <div> {product.description}</div>
+            <input class="input is-primary" type="text" placeholder="Primary input" value={product.description}/>
             <div>{ "Price" }</div>
-            <div>{product.price.to_string()}</div>
+            <input class="input is-primary" type="text" placeholder="Primary input" value={product.price.to_string()}/>
+            <br/>
+            <br/>
             <input
+                class="button is-danger"
                 on:click=on_click
                 type="button"
                 value="Cancel"/>

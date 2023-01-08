@@ -16,7 +16,7 @@ use tower_http::cors::CorsLayer;
 #[cfg(feature = "ssr")]
 #[tokio::main]
 async fn main() {
-    use hackernews_axum::*;
+    use leptos_study::routes::app::*;
     use tower_http::cors::AllowHeaders;
 
     let conf = get_configuration(Some("Cargo.toml")).await.unwrap();
@@ -28,7 +28,7 @@ async fn main() {
     let bundle_path = format!("/{site_root}/{pkg_dir}");
     // The filesystem path of the generated JS/WASM bundle from cargo-leptos
     let bundle_filepath = format!("./{site_root}/{pkg_dir}");
-    let addr = leptos_options.site_address.clone();
+    let addr = leptos_options.site_address;
     log::info!("serving at {addr}");
 
     simple_logger::init_with_level(log::Level::Info).expect("couldn't initialize logging");
@@ -42,7 +42,7 @@ async fn main() {
 
     /// Convert the Errors from ServeDir to a type that implements IntoResponse
     async fn handle_file_error(err: std::io::Error) -> (StatusCode, String) {
-        (StatusCode::NOT_FOUND, format!("File Not Found: {}", err))
+        (StatusCode::NOT_FOUND, format!("File Not Found: {err}"))
     }
 
     let cors = CorsLayer::new()
@@ -73,13 +73,19 @@ async fn main() {
 }
 
 #[cfg(not(feature = "ssr"))]
-use hackernews_axum::*;
+use leptos_study::*;
 
 #[cfg(not(feature = "ssr"))]
 pub fn main() {
+    use leptos_study::app::repository::*;
+    use leptos_study::repositories::product::ApiProductRepository;
+
     console_error_panic_hook::set_once();
     _ = console_log::init_with_level(log::Level::Info);
     console_error_panic_hook::set_once();
+
+    set_product_repository(ApiProductRepository {});
+
     mount_to_body(|cx| {
         view! { cx, <App/> }
     });

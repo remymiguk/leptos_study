@@ -1,7 +1,7 @@
-use crate::api::{self, products};
+use crate::app::pagination::{Limit, Offset};
+use crate::app::repository::product_repository;
 use crate::models::product::Product;
 use leptos::*;
-// use leptos_meta::*;
 use leptos_router::*;
 
 #[component]
@@ -28,18 +28,20 @@ pub fn Products(cx: Scope) -> impl IntoView {
         cx,
         move || (offset(), limit()),
         move |(offset, limit)| async move {
-            let path = format!("?offset={offset}&limit={limit}");
-            api::fetch_api::<Vec<Product>>(cx, &products(&path)).await
+            product_repository()
+                .list(cx, Limit(limit), Offset(offset))
+                .await
+                .map_err(|e| error!("{e}"))
+                .ok()
         },
     );
 
     view! {
         cx,
-
         <Suspense fallback=|| view! { cx, "Loading..." }>
             {move || match products.read() {
                 None => None,
-                Some(None) => Some(view! { cx,  <p>"Error loading products."</p> }.into_view(cx)),
+                Some(None) => Some(view! { cx,  <p>{"Error loading products"}</p> }.into_view(cx)),
                 Some(Some(products)) =>
                     Some(view! { cx, <LoadedProducts products /> }.into_view(cx)),
 
@@ -52,17 +54,20 @@ pub fn Products(cx: Scope) -> impl IntoView {
 #[component]
 pub fn LoadedProducts(cx: Scope, products: Vec<Product>) -> impl IntoView {
     view! { cx,
-        <ul>
-            <For
-                each=move || products.clone()
-                key=|product| product.id
-                view=move |product: Product| {
-                    view! { cx,
-                        <ProductRow product/>
+        <>
+            <h3 class="title is-4">{ "Products list" }</h3>
+            <ul>
+                <For
+                    each=move || products.clone()
+                    key=|product| product.id
+                    view=move |product: Product| {
+                        view! { cx,
+                            <ProductRow product/>
+                        }
                     }
-                }
-            />
-        </ul>
+                />
+            </ul>
+        </>
     }
 }
 
@@ -71,9 +76,9 @@ pub fn ProductRow(cx: Scope, product: Product) -> impl IntoView {
     view! {
         cx,
         <div>
-            <a href=format!("/products/{}", product.id)>
-                { product.description }
-            </a>
+            <A href=format!("/products/{}", product.id)>
+                { product.description.clone() }
+            </A>
         </div>
     }
 }
