@@ -4,14 +4,11 @@ use leptos::*;
 #[cfg(feature = "ssr")]
 #[tokio::main]
 async fn main() {
-    use axum::{error_handling::HandleError, http::Method, Router};
-    use http::HeaderValue;
+    use axum::{error_handling::HandleError, Router};
     use http::StatusCode;
     use leptos_study::app::repository::set_product_repository;
     use leptos_study::repositories::product::BufferProductRepository;
     use leptos_study::routes::app::*;
-    use tower_http::cors::AllowHeaders;
-    use tower_http::cors::CorsLayer;
     use tower_http::services::ServeDir;
 
     let conf = get_configuration(Some("Cargo.toml")).await.unwrap();
@@ -42,19 +39,12 @@ async fn main() {
         (StatusCode::NOT_FOUND, format!("File Not Found: {err}"))
     }
 
-    let cors = CorsLayer::new()
-        //.allow_credentials(true)
-        .allow_headers(AllowHeaders::any()) // [AUTHORIZATION, ACCEPT, COOKIE]
-        .allow_origin(["http://127.0.0.1:3000".parse::<HeaderValue>().unwrap()])
-        .allow_methods([Method::GET, Method::POST, Method::PATCH, Method::OPTIONS]);
-
     // build our application with a route
     let app = Router::new()
         // `GET /` goes to `root`
         .nest_service("/pkg", pkg_service) // Only need if using wasm-pack. Can be deleted if using cargo-leptos
         .nest_service(&bundle_path, cargo_leptos_service) // Only needed if using cargo-leptos. Can be deleted if using wasm-pack and cargo-run
         .nest_service("/static", static_service)
-        .layer(cors.clone())
         .fallback(leptos_axum::render_app_to_stream(
             leptos_options,
             |cx| view! { cx, <App/> },
