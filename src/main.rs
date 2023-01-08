@@ -2,22 +2,17 @@ use leptos::*;
 
 // boilerplate to run in different modes
 #[cfg(feature = "ssr")]
-use axum::{error_handling::HandleError, http::Method, Router};
-#[cfg(feature = "ssr")]
-use http::StatusCode;
-#[cfg(feature = "ssr")]
-use tower_http::services::ServeDir;
-
-#[cfg(feature = "ssr")]
-use http::HeaderValue;
-#[cfg(feature = "ssr")]
-use tower_http::cors::CorsLayer;
-
-#[cfg(feature = "ssr")]
 #[tokio::main]
 async fn main() {
+    use axum::{error_handling::HandleError, http::Method, Router};
+    use http::HeaderValue;
+    use http::StatusCode;
+    use leptos_study::app::repository::set_product_repository;
+    use leptos_study::repositories::product::BufferProductRepository;
     use leptos_study::routes::app::*;
     use tower_http::cors::AllowHeaders;
+    use tower_http::cors::CorsLayer;
+    use tower_http::services::ServeDir;
 
     let conf = get_configuration(Some("Cargo.toml")).await.unwrap();
     let leptos_options = conf.leptos_options;
@@ -32,6 +27,8 @@ async fn main() {
     log::info!("serving at {addr}");
 
     simple_logger::init_with_level(log::Level::Info).expect("couldn't initialize logging");
+
+    set_product_repository(BufferProductRepository::new());
 
     // These are Tower Services that will serve files from the static and pkg repos.
     // HandleError is needed as Axum requires services to implement Infallible Errors
@@ -73,18 +70,16 @@ async fn main() {
 }
 
 #[cfg(not(feature = "ssr"))]
-use leptos_study::*;
-
-#[cfg(not(feature = "ssr"))]
 pub fn main() {
     use leptos_study::app::repository::*;
-    use leptos_study::repositories::product::ApiProductRepository;
+    use leptos_study::repositories::product::BufferProductRepository;
+    use leptos_study::routes::app::*;
 
     console_error_panic_hook::set_once();
     _ = console_log::init_with_level(log::Level::Info);
     console_error_panic_hook::set_once();
 
-    set_product_repository(ApiProductRepository {});
+    set_product_repository(BufferProductRepository::new());
 
     mount_to_body(|cx| {
         view! { cx, <App/> }

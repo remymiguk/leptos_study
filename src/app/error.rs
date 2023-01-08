@@ -14,13 +14,3 @@ pub enum AppError {
     #[error("validation error: `{0}`")]
     Validation(String),
 }
-
-// impl IntoResponse for Error {
-//     fn into_response(self) -> Response {
-//         match self {
-//             Error::Database(e) => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()),
-//             Error::Validation(e) => (StatusCode::BAD_REQUEST, e),
-//         }
-//         .into_response()
-//     }
-// }

@@ -9,19 +9,21 @@ pub fn Nav(cx: Scope) -> impl IntoView {
                 <div class="navbar-menu">
 
                     <div class="navbar-start">
-                        // <a href="/" class="navbar-item">
-                        //     <strong>"Home"</strong>
-                        // </a>
-                        // <a href="/products" class="navbar-item">
-                        //     <strong>"Product"</strong>
-                        // </a>
 
-                        <A href="/" class="navbar-item".to_string()>
+                        // FIXME: here if change to <A> the waning goes away
+                        <a href="/" class="navbar-item">
                             <strong>"Home"</strong>
-                        </A>
-                        <A href="/products" class="navbar-item".to_string()>
+                        </a>
+                        <a href="/products" class="navbar-item">
                             <strong>"Product"</strong>
-                        </A>
+                        </a>
+
+                        // <A href="/" class="navbar-item".to_string()>
+                        //     <strong>"Home"</strong>
+                        // </A>
+                        // <A href="/products" class="navbar-item".to_string()>
+                        //     <strong>"Product"</strong>
+                        // </A>
 
 
                     </div>

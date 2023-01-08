@@ -9,7 +9,7 @@ use leptos::Scope;
 use once_cell::sync::OnceCell;
 use uuid::Uuid;
 
-/// A trait that defines common repository operations
+/// Trait that defines common repository operations.
 #[async_trait(?Send)]
 pub trait Repository: std::fmt::Debug {
     type Entity;
