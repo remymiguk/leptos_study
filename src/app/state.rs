@@ -27,6 +27,11 @@ impl AppState {
         self.logged_user = Some(user);
         self
     }
+
+    pub fn with_logoff(mut self) -> Self {
+        self.logged_user = None;
+        self
+    }
 }
 
 impl Default for AppState {

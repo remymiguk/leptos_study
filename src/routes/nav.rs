@@ -6,21 +6,22 @@ use leptos_router::*;
 pub fn Nav(cx: Scope) -> impl IntoView {
     let app_state = use_context::<StateGetter<AppState>>(cx).unwrap().0;
 
-    let login = move || match app_state().logged_user() {
-        Some(user) => {
-            view! {
-            cx,
-            <A href="/settings" class="navbar-item".to_string()>
-                <strong> {user.email.to_string()}</strong>
-            </A> }
-        }
-        None => {
-            view! {
-            cx,
-            <A href="/login" class="navbar-item".to_string()>
-                <strong>"Login"</strong>
-            </A> }
-        }
+    let logged_menus = move || match app_state().logged_user() {
+        Some(_) => view! {
+        cx,
+        <A href="/products" class="navbar-item".to_string()>
+            <strong>"Product"</strong>
+        </A>
+        <A href="/settings" class="navbar-item".to_string()>
+            <strong>"Settings"</strong>
+        </A> }
+        .into_view(cx),
+        None => view! {
+        cx,
+        <A href="/login" class="navbar-item".to_string()>
+            <strong>"Login"</strong>
+        </A> }
+        .into_view(cx),
     };
 
     view! { cx,
@@ -40,11 +41,8 @@ pub fn Nav(cx: Scope) -> impl IntoView {
                         <A href="/" class="navbar-item".to_string()>
                             <strong>"Home"</strong>
                         </A>
-                        <A href="/products" class="navbar-item".to_string()>
-                            <strong>"Product"</strong>
-                        </A>
 
-                        {login}
+                        {logged_menus}
 
                     </div>
                 </div>

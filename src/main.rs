@@ -21,9 +21,10 @@ async fn main() {
     // The filesystem path of the generated JS/WASM bundle from cargo-leptos
     let bundle_filepath = format!("./{site_root}/{pkg_dir}");
     let addr = leptos_options.site_address;
-    log::info!("serving at {addr}");
 
     simple_logger::init_with_level(log::Level::Info).expect("couldn't initialize logging");
+
+    log::info!("serving at {addr} bundle_path {bundle_path} bundle_filepath {bundle_filepath}");
 
     set_product_repository(BufferProductRepository::new());
 
@@ -52,7 +53,10 @@ async fn main() {
 
     // run our app with hyper
     // `axum::Server` is a re-export of `hyper::Server`
-    log!("listening on {}", addr);
+    log::info!(
+        "listening on {}",
+        addr
+    );
     axum::Server::bind(&addr)
         .serve(app.into_make_service())
         .await

@@ -6,6 +6,7 @@ use crate::routes::login::*;
 use crate::routes::nav::*;
 use crate::routes::product_form::*;
 use crate::routes::products::*;
+use crate::routes::settings::*;
 use leptos::*;
 use leptos_meta::*;
 use leptos_router::*;
@@ -23,7 +24,7 @@ pub fn App(cx: Scope) -> impl IntoView {
         cx,
         <>
             <Stylesheet id="leptos" href="./target/site/pkg/leptos_study.css"/>
-            <Meta name="description" content="Leptos implementation of a HackerNews demo."/>
+            <Meta name="description" content="Leptos study app"/>
 
             <header class="header">
                 <section class="hero is-primary">
@@ -42,6 +43,7 @@ pub fn App(cx: Scope) -> impl IntoView {
                             <Routes>
                                 <Route path="/" view=|cx| view! { cx,  <Home/> }/>
                                 <Route path="login" view=|cx| view! { cx,  <Login/> }/>
+                                <Route path="settings" view=|cx| view! { cx,  <Settings/> }/>
                                 <Route path="products" view=|cx| view! { cx,  <Products/> }/>
                                 <Route path="products/:id" view=|cx| view! { cx,  <ProductForm/> }/>
                             </Routes>
