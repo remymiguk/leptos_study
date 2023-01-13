@@ -2,14 +2,14 @@ use leptos::{ReadSignal, WriteSignal};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct User {
+pub struct LoggedUser {
     pub name: String,
     pub email: String,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct AppState {
-    logged_user: Option<User>,
+    logged_user: Option<LoggedUser>,
 }
 
 impl AppState {
@@ -19,11 +19,11 @@ impl AppState {
         }
     }
 
-    pub fn logged_user(&self) -> Option<User> {
+    pub fn logged_user(&self) -> Option<LoggedUser> {
         self.logged_user.clone()
     }
 
-    pub fn with_login(mut self, user: User) -> Self {
+    pub fn with_login(mut self, user: LoggedUser) -> Self {
         self.logged_user = Some(user);
         self
     }

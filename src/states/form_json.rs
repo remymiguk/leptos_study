@@ -1,25 +1,34 @@
 use serde::{de::DeserializeOwned, Serialize};
+use std::marker::PhantomData;
 use voxi_core::{
     objects::value_json::{get_field_to_str, set_field_from_str},
     ValueType,
 };
 
 #[derive(Clone)]
-pub struct FormJson {
+pub struct FormJson<T: Serialize + DeserializeOwned + Clone + 'static> {
     object: serde_json::Value,
+    _phantom: PhantomData<T>,
 }
 
-impl FormJson {
+impl<T: Serialize + DeserializeOwned + Clone + 'static> FormJson<T> {
     pub fn new(object: serde_json::Value) -> Self {
-        Self { object }
+        Self {
+            object,
+            _phantom: Default::default(),
+        }
     }
 
-    pub fn try_from(object: impl Serialize) -> Result<Self, serde_json::Error> {
+    pub fn try_from(object: T) -> Result<Self, serde_json::Error> {
         Ok(Self::new(serde_json::to_value(&object)?))
     }
 
-    pub fn try_to<T: DeserializeOwned>(&self) -> Result<T, serde_json::Error> {
+    pub fn try_get(&self) -> Result<T, serde_json::Error> {
         serde_json::from_value(self.object.clone())
+    }
+
+    pub fn get(&self) -> T {
+        self.try_get().unwrap()
     }
 
     pub fn get_value_str(
@@ -43,5 +52,11 @@ impl FormJson {
 
     pub fn object(&self) -> &serde_json::Value {
         &self.object
+    }
+}
+
+impl<T: Serialize + DeserializeOwned + Clone + 'static> From<T> for FormJson<T> {
+    fn from(value: T) -> Self {
+        Self::try_from(value).unwrap()
     }
 }
