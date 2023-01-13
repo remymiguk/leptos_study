@@ -1,3 +1,4 @@
+use crate::components::product_form::*;
 use crate::routes::home::*;
 use crate::routes::login::*;
 use crate::routes::products::*;
