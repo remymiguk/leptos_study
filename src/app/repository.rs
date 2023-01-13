@@ -1,9 +1,8 @@
-use crate::models::product::Product;
-
 use super::{
     error::AppError,
     pagination::{Limit, Offset},
 };
+use crate::models::product::Product;
 use async_trait::async_trait;
 use leptos::Scope;
 use once_cell::sync::OnceCell;

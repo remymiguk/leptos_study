@@ -78,14 +78,14 @@ pub struct FormBind {}
 
 #[component]
 pub fn Login(cx: Scope) -> impl IntoView {
-    if true {
-        return view! {
-            cx,
-            <div>
-            </div>
-        }
-        .into_view(cx);
-    }
+    // if true {
+    //     return view! {
+    //         cx,
+    //         <div>
+    //         </div>
+    //     }
+    //     .into_view(cx);
+    // }
 
     let email_password = EmailPassword {
         email: String::from("vanius@gmail.com"),

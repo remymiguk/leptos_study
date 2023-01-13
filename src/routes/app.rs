@@ -23,7 +23,8 @@ pub fn App(cx: Scope) -> impl IntoView {
     view! {
         cx,
         <>
-            <Stylesheet id="leptos" href="./target/site/pkg/leptos_study.css"/>
+            <Link rel="shortcut icon" type_="image/ico" href="/favicon.ico"/>
+            <Stylesheet id="leptos" href="./pkg/leptos_study.css"/>
             <Meta name="description" content="Leptos study app"/>
 
             <header class="header">
@@ -45,7 +46,7 @@ pub fn App(cx: Scope) -> impl IntoView {
                                 <Route path="login" view=|cx| view! { cx,  <Login/> }/>
                                 <Route path="settings" view=|cx| view! { cx,  <Settings/> }/>
                                 <Route path="products" view=|cx| view! { cx,  <Products/> }/>
-                                <Route path="products/:id" view=|cx| view! { cx,  <ProductForm/> }/>
+                                <Route path="product/:id" view=|cx| view! { cx,  <ProductForm/> }/>
                             </Routes>
                         </main>
                     </Router>

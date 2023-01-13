@@ -76,7 +76,7 @@ pub fn ProductRow(cx: Scope, product: Product) -> impl IntoView {
     view! {
         cx,
         <div>
-            <A href=format!("/products/{}", product.id)>
+            <A href=format!("/product/{}", product.id)>
                 { product.description.clone() }
             </A>
         </div>

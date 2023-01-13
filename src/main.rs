@@ -1,75 +1,47 @@
-use leptos::*;
-
-// boilerplate to run in different modes
 #[cfg(feature = "ssr")]
 #[tokio::main]
 async fn main() {
-    use axum::{error_handling::HandleError, Router};
-    use http::StatusCode;
-    use leptos_study::app::repository::set_product_repository;
-    use leptos_study::repositories::product::BufferProductRepository;
+    use axum::Router;
+    use axum::{extract::Extension, routing::get};
+    use leptos::*;
+    use leptos_axum::{generate_route_list, LeptosRoutes};
+    use leptos_study::file::file_handler;
     use leptos_study::routes::app::*;
-    use tower_http::services::ServeDir;
+    use std::sync::Arc;
+
+    // The URL path of the generated JS/WASM bundle from cargo-leptos
 
     let conf = get_configuration(Some("Cargo.toml")).await.unwrap();
     let leptos_options = conf.leptos_options;
-    let site_root = &leptos_options.site_root;
-    let pkg_dir = &leptos_options.site_pkg_dir;
-
-    // The URL path of the generated JS/WASM bundle from cargo-leptos
-    let bundle_path = format!("/{site_root}/{pkg_dir}");
-    // The filesystem path of the generated JS/WASM bundle from cargo-leptos
-    let bundle_filepath = format!("./{site_root}/{pkg_dir}");
     let addr = leptos_options.site_address;
+    let routes = generate_route_list(|cx| view! { cx, <App/> }).await;
 
-    simple_logger::init_with_level(log::Level::Info).expect("couldn't initialize logging");
-
-    log::info!("serving at {addr} bundle_path {bundle_path} bundle_filepath {bundle_filepath}");
-
-    set_product_repository(BufferProductRepository::new());
-
-    // These are Tower Services that will serve files from the static and pkg repos.
-    // HandleError is needed as Axum requires services to implement Infallible Errors
-    // because all Errors are converted into Responses
-    let static_service = HandleError::new(ServeDir::new("./static"), handle_file_error);
-    let pkg_service = HandleError::new(ServeDir::new("./pkg"), handle_file_error);
-    let cargo_leptos_service = HandleError::new(ServeDir::new(&bundle_filepath), handle_file_error);
-
-    /// Convert the Errors from ServeDir to a type that implements IntoResponse
-    async fn handle_file_error(err: std::io::Error) -> (StatusCode, String) {
-        (StatusCode::NOT_FOUND, format!("File Not Found: {err}"))
-    }
+    simple_logger::init_with_level(log::Level::Debug).expect("couldn't initialize logging");
 
     // build our application with a route
     let app = Router::new()
-        // `GET /` goes to `root`
-        .nest_service("/pkg", pkg_service) // Only need if using wasm-pack. Can be deleted if using cargo-leptos
-        .nest_service(&bundle_path, cargo_leptos_service) // Only needed if using cargo-leptos. Can be deleted if using wasm-pack and cargo-run
-        .nest_service("/static", static_service)
-        .fallback(leptos_axum::render_app_to_stream(
-            leptos_options,
-            |cx| view! { cx, <App/> },
-        ));
+        .route("/favicon.ico", get(file_handler))
+        .leptos_routes(leptos_options.clone(), routes, |cx| view! { cx, <App/> })
+        .fallback(file_handler)
+        .layer(Extension(Arc::new(leptos_options)));
 
     // run our app with hyper
     // `axum::Server` is a re-export of `hyper::Server`
-    log::info!(
-        "listening on {}",
-        addr
-    );
+    log!("listening on {}", addr);
     axum::Server::bind(&addr)
         .serve(app.into_make_service())
         .await
         .unwrap();
 }
 
+// client-only stuff for Trunk
 #[cfg(not(feature = "ssr"))]
 pub fn main() {
+    use leptos::*;
     use leptos_study::app::repository::*;
     use leptos_study::repositories::product::BufferProductRepository;
     use leptos_study::routes::app::*;
 
-    console_error_panic_hook::set_once();
     _ = console_log::init_with_level(log::Level::Info);
     console_error_panic_hook::set_once();
 

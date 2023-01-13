@@ -1,16 +1,15 @@
 mod api;
 pub mod app;
-pub mod handlers;
 pub mod models;
-pub mod repositories;
 pub mod routes;
+pub mod repositories;
+pub mod handlers;
+pub mod file;
 
 // Needs to be in lib.rs AFAIK because wasm-bindgen needs us to be compiling a lib. I may be wrong.
-#[cfg(feature = "hydrate")]
-use wasm_bindgen::prelude::wasm_bindgen;
 
 #[cfg(feature = "hydrate")]
-#[wasm_bindgen]
+#[wasm_bindgen::prelude::wasm_bindgen]
 pub fn hydrate() {
     use crate::app::repository::*;
     use crate::repositories::product::BufferProductRepository;
