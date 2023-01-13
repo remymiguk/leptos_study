@@ -1,8 +1,8 @@
-use crate::app::state::AppState;
-use crate::app::state::StateGetter;
-use crate::app::state::StateSetter;
 use crate::components::app_routes::*;
 use crate::components::nav::*;
+use crate::states::app_state::AppState;
+use crate::states::app_state::StateGetter;
+use crate::states::app_state::StateSetter;
 use leptos::*;
 use leptos_meta::*;
 use leptos_router::*;

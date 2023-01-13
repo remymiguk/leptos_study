@@ -1,6 +1,7 @@
-use crate::app::state::{AppState, StateGetter, StateSetter};
 use leptos::*;
 use leptos_router::{use_navigate, NavigateOptions};
+
+use crate::states::app_state::{AppState, StateGetter, StateSetter};
 
 #[component]
 pub fn Settings(cx: Scope) -> impl IntoView {

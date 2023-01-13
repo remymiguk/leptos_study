@@ -1,4 +1,4 @@
-use crate::app::state::{AppState, StateGetter};
+use crate::states::app_state::{AppState, StateGetter};
 use leptos::*;
 use leptos_router::*;
 
