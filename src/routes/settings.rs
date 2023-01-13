@@ -21,14 +21,11 @@ pub fn Settings(cx: Scope) -> impl IntoView {
 
     view! {
         cx,
-        <>
-            <h4>{logged_user_s}</h4>
-            <input
-                class="button is-danger"
-                on:click=on_click
-                type="button"
-                value="Logoff"/>
-        </>
-
+        <h4>{logged_user_s}</h4>
+        <input
+            class="button is-danger"
+            on:click=on_click
+            type="button"
+            value="Logoff"/>
     }
 }

@@ -16,7 +16,7 @@ async fn main() {
     let addr = leptos_options.site_address;
     let routes = generate_route_list(|cx| view! { cx, <App/> }).await;
 
-    simple_logger::init_with_level(log::Level::Debug).expect("couldn't initialize logging");
+    simple_logger::init_with_level(log::Level::Info).expect("couldn't initialize logging");
 
     // build our application with a route
     let app = Router::new()

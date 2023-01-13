@@ -33,18 +33,14 @@ pub fn ProductForm(cx: Scope) -> impl IntoView {
 
     view! {
         cx,
-        <>
-            <Meta name="description" content=meta_description/>
-            <Suspense fallback=|| view! { cx, "Loading..." }>
-                {move || product.read().map(|product| match product {
-                    None => view! { cx,  <div class="item-view">"Error loading this product."</div> }.into_view(cx),
-                    Some(product) => view! { cx, <LoadedProductForm product /> }.into_view(cx),
-                    })
-                }
-            </Suspense>
-        </>
-
-
+        <Meta name="description" content=meta_description/>
+        <Suspense fallback=|| view! { cx, "Loading..." }>
+            {move || product.read().map(|product| match product {
+                None => view! { cx,  <div class="item-view">"Error loading this product."</div> }.into_view(cx),
+                Some(product) => view! { cx, <LoadedProductForm product /> }.into_view(cx),
+                })
+            }
+        </Suspense>
     }
 }
 

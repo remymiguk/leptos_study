@@ -54,20 +54,18 @@ pub fn Products(cx: Scope) -> impl IntoView {
 #[component]
 pub fn LoadedProducts(cx: Scope, products: Vec<Product>) -> impl IntoView {
     view! { cx,
-        <>
-            <h3 class="title is-4">{ "Products list" }</h3>
-            <ul>
-                <For
-                    each=move || products.clone()
-                    key=|product| product.id
-                    view=move |product: Product| {
-                        view! { cx,
-                            <ProductRow product/>
-                        }
+        <h3 class="title is-4">{ "Products list" }</h3>
+        <ul>
+            <For
+                each=move || products.clone()
+                key=|product| product.id
+                view=move |product: Product| {
+                    view! { cx,
+                        <ProductRow product/>
                     }
-                />
-            </ul>
-        </>
+                }
+            />
+        </ul>
     }
 }
 

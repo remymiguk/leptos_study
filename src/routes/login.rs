@@ -115,8 +115,6 @@ pub fn Login(cx: Scope) -> impl IntoView {
 
     view! {
         cx,
-        <>
-
             <div>
                 <div>{move ||format!("{:?}", map_state().0)}</div>
                 <div>{ "User" }</div>
@@ -137,8 +135,6 @@ pub fn Login(cx: Scope) -> impl IntoView {
                 on:click=on_click
                 type="button"
                 value="Login"/>
-        </>
-
     }
     .into_view(cx)
 }

@@ -24,21 +24,19 @@ pub fn Nav(cx: Scope) -> impl IntoView {
     };
 
     view! { cx,
-        <>
-            <nav class="navbar is-primary" role="navigation" aria-label="main navigation">
-                <div class="navbar-menu">
-                    <div class="navbar-start">
+        <nav class="navbar is-primary" role="navigation" aria-label="main navigation">
+            <div class="navbar-menu">
+                <div class="navbar-start">
 
 
-                        <A href="/" class="navbar-item".to_string()>
-                            <strong>"Home"</strong>
-                        </A>
+                    <A href="/" class="navbar-item".to_string()>
+                        <strong>"Home"</strong>
+                    </A>
 
-                        {logged_menus}
+                    {logged_menus}
 
-                    </div>
                 </div>
-            </nav>
-        </>
+            </div>
+        </nav>
     }
 }

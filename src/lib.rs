@@ -5,6 +5,7 @@ pub mod routes;
 pub mod repositories;
 pub mod handlers;
 pub mod file;
+pub mod components;
 
 // Needs to be in lib.rs AFAIK because wasm-bindgen needs us to be compiling a lib. I may be wrong.
 
