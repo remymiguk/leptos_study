@@ -5,8 +5,43 @@ use std::collections::HashMap;
 // use voxi_core::{objects::value_json::get_field_to_str, ValueType};
 use web_sys::Event;
 
+// #[derive(Clone)]
+// pub struct FormMap(pub HashMap<String, String>);
+
 #[derive(Clone)]
-pub struct FormMap(pub HashMap<String, String>);
+pub struct FormJson(serde_json::Value);
+
+impl FormJson {
+    pub fn try_from(object: impl Serialize) -> Result<Self, serde_json::Error> {
+        Ok(Self(serde_json::to_value(&object)?))
+    }
+
+    pub fn try_to<T: DeserializeOwned>(&self) -> Result<T, serde_json::Error> {
+        serde_json::from_value(self.0.clone())
+    }
+
+    pub fn get_value_str(&self, field_name: &str) -> Result<String, serde_json::Error> {
+        let str = match self.0.as_object().unwrap().get(field_name) {
+            Some(value) => value,
+            None => return Ok(String::new()),
+        }
+        .to_string();
+        Ok(str)
+    }
+
+    pub fn set_value_str(&mut self, field_name: &str, str: &str) -> Result<(), serde_json::Error> {
+        let map = self.0.as_object_mut().unwrap();
+        match map.get_mut(field_name) {
+            Some(value) => {
+                *value = serde_json::from_str(str)?;
+            }
+            None => {
+                map.insert(field_name.to_string(), serde_json::to_value(str)?);
+            }
+        };
+        Ok(())
+    }
+}
 
 // #[derive(Clone)]
 // pub struct FormObject<T: Serialize + DeserializeOwned + Clone>(pub T);
@@ -25,9 +60,9 @@ pub fn InputBind(cx: Scope, field_name: String) -> impl IntoView {
 }
 
 fn memo_content_map(cx: Scope, field_name: String) -> Memo<String> {
-    let form_state = use_context::<StateGetter<FormMap>>(cx).unwrap().0;
+    let form_state = use_context::<StateGetter<FormJson>>(cx).unwrap().0;
     create_memo(cx, move |_| {
-        form_state().0.get(&field_name).cloned().unwrap_or_default()
+        form_state().get_value_str(&field_name).unwrap()
     })
 }
 
@@ -45,12 +80,12 @@ fn memo_content_map(cx: Scope, field_name: String) -> Memo<String> {
 
 fn event_to_map(cx: Scope, field_name: String) -> impl Fn(Event) {
     move |e: Event| {
-        let form_state = use_context::<StateGetter<FormMap>>(cx).unwrap().0;
+        let form_state = use_context::<StateGetter<FormJson>>(cx).unwrap().0;
         let value_s = event_target_value(&e);
-        let mut form_map = form_state().0;
-        form_map.insert(field_name.clone(), value_s);
-        let set_form_state = use_context::<StateSetter<FormMap>>(cx).unwrap().0;
-        set_form_state.set(FormMap(form_map));
+        let mut form_map = form_state();
+        form_map.set_value_str(&field_name, &value_s).unwrap();
+        let set_form_state = use_context::<StateSetter<FormJson>>(cx).unwrap().0;
+        set_form_state.set(form_map);
     }
 }
 
@@ -92,10 +127,12 @@ pub fn Login(cx: Scope) -> impl IntoView {
         password: String::from("password"),
     };
 
-    let mut user_map = HashMap::new();
-    user_map.insert(String::from("user"), String::from("vanius@gmail.com"));
-    user_map.insert(String::from("password"), String::from(""));
-    let (map_state, set_map_state) = create_signal(cx, FormMap(user_map));
+    // let mut user_map = HashMap::new();
+    // user_map.insert(String::from("user"), String::from("vanius@gmail.com"));
+    // user_map.insert(String::from("password"), String::from(""));
+
+    let (map_state, set_map_state) =
+        create_signal(cx, FormJson::try_from(&email_password).unwrap());
 
     provide_context(cx, StateGetter(map_state));
     provide_context(cx, StateSetter(set_map_state));

@@ -1,5 +1,18 @@
 {
-    "rust-analyzer.cargo.features": [
-        "ssr"
-    ]
+    // "rust-analyzer.cargo.features": [
+    //     "ssr"
+    // ],
+    "workbench.colorCustomizations": {
+        "[Monokai Pro (Filter Spectrum)]": {
+            "editorInlayHint.foreground": "#759394a2",
+            "editorInlayHint.background": "#00f53507",
+            "editorInlayHint.typeForeground": "#759394a2",
+            "editorInlayHint.typeBackground": "#00f53507",
+            "editorInlayHint.parameterForeground": "#759394a2",
+            "editorInlayHint.parameterBackground": "#00f53507"
+        },
+        "activityBar.background": "#482411",
+        "titleBar.activeBackground": "#643317",
+        "titleBar.activeForeground": "#FEFBF9"
+    }
 }
