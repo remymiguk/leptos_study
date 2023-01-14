@@ -7,8 +7,8 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Serialize, Deserialize, Debug, Default)]
 pub struct EmailPassword {
-    email: String,
-    password: String,
+    email: Option<String>,
+    password: Option<String>,
 }
 
 pub fn apply_login(cx: Scope, email_password: EmailPassword) {
@@ -16,8 +16,8 @@ pub fn apply_login(cx: Scope, email_password: EmailPassword) {
 
     set_app_state.update(move |app_state| {
         *app_state = app_state.clone().with_login(LoggedUser {
-            name: email_password.email.clone(),
-            email: email_password.email,
+            name: email_password.email.clone().unwrap_or_default(),
+            email: email_password.email.unwrap_or_default(),
         })
     });
 }
@@ -25,24 +25,13 @@ pub fn apply_login(cx: Scope, email_password: EmailPassword) {
 #[component]
 pub fn Login(cx: Scope) -> impl IntoView {
     let email_password = EmailPassword {
-        email: String::from("vanius@gmail.com"),
-        password: String::from("password"),
+        email: Some(String::from("vanius@gmail.com")),
+        password: Some(String::from("password")),
     };
 
     let form_object = FormObject::new(cx, email_password);
 
-    let read_signal = form_object.read_signal();
-    let write_signal = form_object.write_signal();
-
-    let on_login_click = move |_| {
-        let email_password = read_signal().get();
-        apply_login(cx, email_password);
-
-        let navigator = window().history().unwrap();
-        navigator.back().unwrap();
-    };
-
-    let on_login_clear = move |_| write_signal.set(EmailPassword::default().into());
+    let (read_signal, write_signal) = form_object.signal();
 
     view! {
         cx,
@@ -56,16 +45,24 @@ pub fn Login(cx: Scope) -> impl IntoView {
                 <br/>
                 <input
                     class="button is-danger"
-                    on:click=on_login_clear
+                    on:click=move |_| {
+                        apply_login(cx, read_signal().get());
+                        history_back();
+                    }   
+                    type="button"
+                    value="Login"/>
+                <br/>
+                <input
+                    class="button is-danger"
+                    on:click=move |_| write_signal.set(EmailPassword::default().into())
                     type="button"
                     value="Clear"/>
             </div>
 
-            <input
-                class="button is-danger"
-                on:click=on_login_click
-                type="button"
-                value="Login"/>
+
     }
-    .into_view(cx)
+}
+
+fn history_back() {
+    window().history().unwrap().back().unwrap()
 }

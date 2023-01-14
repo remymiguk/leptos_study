@@ -34,8 +34,9 @@ impl<T: Serialize + DeserializeOwned + Clone + 'static> FormObject<T> {
         view! {
             cx,
             <input class="input is-primary" type="text" placeholder="Primary input"
-            on:input=on_input
-            value=move || content.get().unwrap_or_default()/>
+                on:input=on_input
+                prop:value=content
+            />
         }
     }
 
@@ -44,14 +45,13 @@ impl<T: Serialize + DeserializeOwned + Clone + 'static> FormObject<T> {
         cx: Scope,
         field_name: String,
         value_type: ValueType,
-    ) -> Memo<Option<String>> {
+    ) -> Memo<String> {
         let read_signal = self.read_signal;
         create_memo(cx, move |_| {
-            let result = read_signal()
+            read_signal()
                 .get_value_str(&field_name, value_type)
-                .unwrap();
-            info!("memo signal {result:?}");
-            result
+                .unwrap()
+                .unwrap_or_default()
         })
     }
 
@@ -71,6 +71,10 @@ impl<T: Serialize + DeserializeOwned + Clone + 'static> FormObject<T> {
                 .unwrap();
             write_signal.set(form_map);
         }
+    }
+
+    pub fn signal(&self) -> (ReadSignal<FormJson<T>>, WriteSignal<FormJson<T>>) {
+        (self.read_signal, self.write_signal)
     }
 
     pub fn read_signal(&self) -> ReadSignal<FormJson<T>> {
