@@ -1,9 +1,11 @@
 use crate::states::{
     app_state::{AppState, LoggedUser, StateSetter},
     form_object::*,
+    validator::ValidatorPassword,
 };
 use leptos::*;
 use serde::{Deserialize, Serialize};
+use voxi_core::ValueType;
 
 pub fn apply_login(cx: Scope, email_password: EmailPassword) {
     let set_app_state = use_context::<StateSetter<AppState>>(cx).unwrap().0;
@@ -27,15 +29,19 @@ pub struct EmailPassword {
 
 #[component]
 pub fn Login(cx: Scope) -> impl IntoView {
-    let fo = FormObject::new(cx, EmailPassword::default());
+    let mut fo = FormObject::new(cx, EmailPassword::default());
+
+    fo = fo.with_validator(Box::new(ValidatorPassword::new(
+        ValueType::String,
+        "password",
+    )));
+
     let (read_signal, write_signal) = fo.signal();
     view! {
         cx,
             <div>{move ||format!("Object content: {:?}", read_signal().get())}</div>
-            <div>{"User"}</div>
-            <InputBind fo=&fo field_name="email"/>
-            <div>{"Password"}</div>
-            <InputBind fo=&fo field_name="password"/>
+            <InputBind fo=&fo literal="E-mail" field_name="email" placeholder="User e-mail"/>
+            <InputBind fo=&fo literal="Password" field_name="password" placeholder="User password"/>
             <br/><br/>
             <input type="button" value="Login" class="button is-danger"
                 on:click=move |_| {

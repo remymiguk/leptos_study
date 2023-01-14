@@ -24,7 +24,7 @@ pub trait ValidatorProvider: Clone + std::fmt::Debug {
     }
 
     fn create_request(&self, object_j: &serde_json::Value, field_name: &str) -> ValidatorRequest {
-        let subset_values = object_j_to_subset_values(&object_j, self.fields()).unwrap();
+        let subset_values = object_j_to_subset_values(object_j, self.fields()).unwrap();
         ValidatorRequest {
             subset_values,
             field_name: field_name.to_string(),
@@ -40,12 +40,12 @@ pub async fn exec_validator(
 }
 
 #[derive(Clone, PartialEq, Eq, Debug)]
-pub struct InputValidator {
+pub struct ValidatorPassword {
     field_name_type: FieldNameType,
     sub_fields: Vec<FieldNameType>,
 }
 
-impl InputValidator {
+impl ValidatorPassword {
     pub fn new(v_type: impl IntoValueType, field_name: impl IntoFieldName) -> Self {
         let field_name_type = (v_type, field_name).into_field_name_type();
         Self {
@@ -60,14 +60,14 @@ impl InputValidator {
     }
 }
 
-impl std::fmt::Display for InputValidator {
+impl std::fmt::Display for ValidatorPassword {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{:?}", self.field_name_type)
     }
 }
 
 #[async_trait]
-impl ValidatorProvider for InputValidator {
+impl ValidatorProvider for ValidatorPassword {
     fn field_name(&self) -> &FieldNameType {
         &self.field_name_type
     }
@@ -79,24 +79,24 @@ impl ValidatorProvider for InputValidator {
     async fn validate(&self, request: ValidatorRequest) -> Result<ValidatorResponse, String> {
         #[derive(Serialize, Deserialize)]
         struct Fields {
-            user_name: Option<String>,
+            password: Option<String>,
             email: Option<String>,
         }
 
         let mut fields: Fields = request.subset_values.object();
 
-        let mut user_name = fields.user_name.unwrap_or_default();
-        user_name.truncate(10);
+        let mut password = fields.password.unwrap_or_default();
+        password.truncate(10);
 
-        fields.user_name = Some(user_name.clone());
+        fields.password = Some(password.clone());
 
-        fields.email = Some(format!("{}@gmail.com", user_name));
+        fields.email = Some(format!("{password}@gmail.com"));
 
         let subset_values = SubsetValues::from_object(&fields, self.fields()).unwrap();
 
         let response = ValidatorResponse {
-            hint: format!("hint: {:?}", fields.user_name),
-            valid: fields.user_name.unwrap_or_default().len() % 2 == 0,
+            hint: Some(format!("hint: {:?}", fields.password)),
+            valid: fields.password.unwrap_or_default().len() % 2 == 0,
             opt_subset_values: Some(subset_values),
         };
 
@@ -118,13 +118,6 @@ impl ValidatorRequest {
         }
     }
 }
-
-// impl Hash for ValidatorRequest {
-//     fn hash<H: Hasher>(&self, state: &mut H) {
-//         self.field_name.hash(state);
-//         self.subset_values.hash(state);
-//     }
-// }
 
 impl PartialEq for ValidatorRequest {
     fn eq(&self, other: &Self) -> bool {
@@ -156,15 +149,9 @@ impl ValidatorRequestCommand {
     }
 }
 
-// impl Hash for ValidatorRequestCommand {
-//     fn hash<H: Hasher>(&self, state: &mut H) {
-//         self.request.hash(state);
-//     }
-// }
-
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ValidatorResponse {
-    pub hint: String,
+    pub hint: Option<String>,
     pub valid: bool,
     pub opt_subset_values: Option<SubsetValues>,
 }

@@ -25,6 +25,6 @@ impl fmt::Display for InputMode {
             InputMode::Search => String::from("search"),
             InputMode::Tel => String::from("tel"),
         };
-        write!(f, "{}", s)
+        write!(f, "{s}")
     }
 }
