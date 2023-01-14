@@ -1,9 +1,9 @@
 use crate::states::{
     app_state::{AppState, LoggedUser, StateSetter},
-    form_object::FormObject,
+    form_object::*,
 };
 use leptos::*;
-use serde::{de::DeserializeOwned, Deserialize, Serialize};
+use serde::{Deserialize, Serialize};
 
 pub fn apply_login(cx: Scope, email_password: EmailPassword) {
     let set_app_state = use_context::<StateSetter<AppState>>(cx).unwrap().0;
@@ -14,19 +14,6 @@ pub fn apply_login(cx: Scope, email_password: EmailPassword) {
             email: email_password.email.unwrap_or_default(),
         })
     });
-}
-
-#[component]
-pub fn InputBind<T, 'a>(cx: Scope, fo: &'a FormObject<T>, field_name: &'a str) -> impl IntoView
-where
-    T: Serialize + DeserializeOwned + Clone + 'static,
-{
-    view! {
-        cx,
-        <>
-            { FormObject::input_bind(fo, field_name) }
-        </>
-    }
 }
 
 // Where is the typing event?
@@ -45,9 +32,9 @@ pub fn Login(cx: Scope) -> impl IntoView {
     view! {
         cx,
             <div>{move ||format!("Object content: {:?}", read_signal().get())}</div>
-            <div>{ "User" }</div>
+            <div>{"User"}</div>
             <InputBind fo=&fo field_name="email"/>
-            <div>{ "Password" }</div>
+            <div>{"Password"}</div>
             <InputBind fo=&fo field_name="password"/>
             <br/><br/>
             <input type="button" value="Login" class="button is-danger"
