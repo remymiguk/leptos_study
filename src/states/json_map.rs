@@ -6,12 +6,12 @@ use voxi_core::{
 };
 
 #[derive(Clone)]
-pub struct FormJson<T: Serialize + DeserializeOwned + Clone + 'static> {
-    object: serde_json::Value,
+pub struct JsonMap<T: Serialize + DeserializeOwned + Clone + 'static> {
     _phantom: PhantomData<T>,
+    object: serde_json::Value,
 }
 
-impl<T: Serialize + DeserializeOwned + Clone + 'static> FormJson<T> {
+impl<T: Serialize + DeserializeOwned + Clone + 'static> JsonMap<T> {
     pub fn new(object: serde_json::Value) -> Self {
         Self {
             object,
@@ -55,7 +55,7 @@ impl<T: Serialize + DeserializeOwned + Clone + 'static> FormJson<T> {
     }
 }
 
-impl<T: Serialize + DeserializeOwned + Clone + 'static> From<T> for FormJson<T> {
+impl<T: Serialize + DeserializeOwned + Clone + 'static> From<T> for JsonMap<T> {
     fn from(value: T) -> Self {
         Self::try_from(value).unwrap()
     }

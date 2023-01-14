@@ -1,25 +1,21 @@
-use super::form_json::FormJson;
+use super::json_map::JsonMap;
 use leptos::*;
-use log::info;
 use serde::{de::DeserializeOwned, Serialize};
-use std::marker::PhantomData;
 use voxi_core::ValueType;
 use web_sys::Event;
 
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 pub struct FormObject<T: Serialize + DeserializeOwned + Clone + 'static> {
-    _phantom: PhantomData<T>,
     cx: Scope,
-    read_signal: ReadSignal<FormJson<T>>,
-    write_signal: WriteSignal<FormJson<T>>,
+    read_signal: ReadSignal<JsonMap<T>>,
+    write_signal: WriteSignal<JsonMap<T>>,
 }
 
 impl<T: Serialize + DeserializeOwned + Clone + 'static> FormObject<T> {
     pub fn new(cx: Scope, object: T) -> Self {
-        let (read_signal, write_signal) = create_signal(cx, FormJson::try_from(object).unwrap());
+        let (read_signal, write_signal) = create_signal(cx, JsonMap::try_from(object).unwrap());
         Self {
             cx,
-            _phantom: Default::default(),
             read_signal,
             write_signal,
         }
@@ -27,9 +23,8 @@ impl<T: Serialize + DeserializeOwned + Clone + 'static> FormObject<T> {
 
     pub fn input_bind(&self, field_name: &str) -> impl IntoView {
         let field_name = field_name.to_string();
-        let content = self.memo_content_map(self.cx, field_name.clone(), ValueType::String);
+        let content = self.memo_content_map(field_name.clone(), ValueType::String);
         let on_input = self.event_to_map(field_name, ValueType::String);
-
         let cx = self.cx;
         view! {
             cx,
@@ -40,14 +35,9 @@ impl<T: Serialize + DeserializeOwned + Clone + 'static> FormObject<T> {
         }
     }
 
-    fn memo_content_map(
-        &self,
-        cx: Scope,
-        field_name: String,
-        value_type: ValueType,
-    ) -> Memo<String> {
+    fn memo_content_map(&self, field_name: String, value_type: ValueType) -> Memo<String> {
         let read_signal = self.read_signal;
-        create_memo(cx, move |_| {
+        create_memo(self.cx, move |_| {
             read_signal()
                 .get_value_str(&field_name, value_type)
                 .unwrap()
@@ -73,15 +63,15 @@ impl<T: Serialize + DeserializeOwned + Clone + 'static> FormObject<T> {
         }
     }
 
-    pub fn signal(&self) -> (ReadSignal<FormJson<T>>, WriteSignal<FormJson<T>>) {
+    pub fn signal(&self) -> (ReadSignal<JsonMap<T>>, WriteSignal<JsonMap<T>>) {
         (self.read_signal, self.write_signal)
     }
 
-    pub fn read_signal(&self) -> ReadSignal<FormJson<T>> {
+    pub fn read_signal(&self) -> ReadSignal<JsonMap<T>> {
         self.read_signal
     }
 
-    pub fn write_signal(&self) -> WriteSignal<FormJson<T>> {
+    pub fn write_signal(&self) -> WriteSignal<JsonMap<T>> {
         self.write_signal
     }
 
@@ -92,7 +82,7 @@ impl<T: Serialize + DeserializeOwned + Clone + 'static> FormObject<T> {
 
     pub fn set(&self, object: T) {
         let write_signal = self.write_signal();
-        let json = FormJson::try_from(object).unwrap();
+        let json = JsonMap::try_from(object).unwrap();
         write_signal.set(json);
     }
 }

@@ -3,7 +3,7 @@ use crate::states::{
     form_object::FormObject,
 };
 use leptos::*;
-use serde::{Deserialize, Serialize};
+use serde::{de::DeserializeOwned, Deserialize, Serialize};
 
 #[derive(Clone, Serialize, Deserialize, Debug, Default)]
 pub struct EmailPassword {
@@ -23,24 +23,37 @@ pub fn apply_login(cx: Scope, email_password: EmailPassword) {
 }
 
 #[component]
+pub fn InputBind<T, 'a>(cx: Scope, fo: &'a FormObject<T>, field_name: &'a str) -> impl IntoView
+where
+    T: Serialize + DeserializeOwned + Clone + 'static,
+{
+    view! {
+        cx,
+        <>
+            { FormObject::input_bind(fo, field_name) }
+        </>
+    }
+}
+
+#[component]
 pub fn Login(cx: Scope) -> impl IntoView {
     let email_password = EmailPassword {
         email: Some(String::from("vanius@gmail.com")),
         password: Some(String::from("password")),
     };
 
-    let form_object = FormObject::new(cx, email_password);
+    let fo = FormObject::new(cx, email_password);
 
-    let (read_signal, write_signal) = form_object.signal();
+    let (read_signal, write_signal) = fo.signal();
 
     view! {
         cx,
             <div>
                 <div>{move ||format!("{:?}", read_signal().get())}</div>
                 <div>{ "User" }</div>
-                { form_object.input_bind("email") }
+                <InputBind fo=&fo field_name = "email"/>
                 <div>{ "Password" }</div>
-                { form_object.input_bind("password") }
+                <InputBind fo=&fo field_name = "password"/>
                 <br/>
                 <br/>
                 <input
@@ -48,7 +61,7 @@ pub fn Login(cx: Scope) -> impl IntoView {
                     on:click=move |_| {
                         apply_login(cx, read_signal().get());
                         history_back();
-                    }   
+                    }
                     type="button"
                     value="Login"/>
                 <br/>
