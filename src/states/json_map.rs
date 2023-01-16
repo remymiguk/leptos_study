@@ -1,18 +1,22 @@
-use serde::{de::DeserializeOwned, Serialize};
+use crate::states::object::Object;
+use serde::{Deserialize, Serialize};
 use std::marker::PhantomData;
 use voxi_core::{
     objects::value_json::{get_field_to_str, set_field_from_str},
     ValueType,
 };
 
-#[derive(Clone)]
-pub struct JsonMap<T: Serialize + DeserializeOwned + Clone + 'static> {
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct JsonMap<T: Object> {
+    #[serde(skip)]
     _phantom: PhantomData<T>,
+    #[serde(flatten)]
     object: serde_json::Value,
 }
 
-impl<T: Serialize + DeserializeOwned + Clone + 'static> JsonMap<T> {
-    pub fn new(object: serde_json::Value) -> Self {
+impl<T: Object> JsonMap<T> {
+    pub fn new(object: impl Serialize) -> Self {
+        let object = serde_json::to_value(object).unwrap();
         Self {
             object,
             _phantom: Default::default(),
@@ -55,8 +59,20 @@ impl<T: Serialize + DeserializeOwned + Clone + 'static> JsonMap<T> {
     }
 }
 
-impl<T: Serialize + DeserializeOwned + Clone + 'static> From<T> for JsonMap<T> {
+impl<T: Object> From<T> for JsonMap<T> {
     fn from(value: T) -> Self {
         Self::try_from(value).unwrap()
     }
 }
+
+impl<T: Object> From<JsonMap<T>> for serde_json::Value {
+    fn from(value: JsonMap<T>) -> Self {
+        value.object
+    }
+}
+
+// impl<T: Object> From<serde_json::Value> for JsonMap<T> {
+//     fn from(value: T) -> Self {
+//         Self::try_from(value).unwrap()
+//     }
+// }

@@ -1,7 +1,7 @@
 use crate::states::{
     app_state::{AppState, LoggedUser, StateSetter},
     form_object::*,
-    validator::ValidatorPassword,
+    validator::{ValidatorPassword, ValidatorProvider},
 };
 use leptos::*;
 use serde::{Deserialize, Serialize};
@@ -21,7 +21,7 @@ pub fn apply_login(cx: Scope, email_password: EmailPassword) {
 // Where is the typing event?
 // Where are the fields are being cleaned?
 
-#[derive(Clone, Serialize, Deserialize, Debug, Default)]
+#[derive(Clone, Serialize, Deserialize, Debug, Default, PartialEq, Eq)]
 pub struct EmailPassword {
     email: Option<String>,
     password: Option<String>,
@@ -29,12 +29,12 @@ pub struct EmailPassword {
 
 #[component]
 pub fn Login(cx: Scope) -> impl IntoView {
-    let mut fo = FormObject::new(cx, EmailPassword::default());
+    let validators = vec![
+        Box::new(ValidatorPassword::new(ValueType::String, "password"))
+            as Box<dyn ValidatorProvider>,
+    ];
 
-    fo = fo.with_validator(Box::new(ValidatorPassword::new(
-        ValueType::String,
-        "password",
-    )));
+    let fo = FormObject::new(cx, EmailPassword::default(), validators);
 
     let (read_signal, write_signal) = fo.signal();
     view! {
