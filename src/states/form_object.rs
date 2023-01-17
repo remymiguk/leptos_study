@@ -1,12 +1,9 @@
-use super::{
-    json_map::JsonMap,
-    validator::{exec_validator, ValidatorProvider},
-};
+use super::{json_map::JsonMap, validator::ValidatorProvider};
 use crate::states::input_mode::InputMode;
 use crate::states::object::Object;
 use leptos::*;
 use log::info;
-use serde::{de::DeserializeOwned, Serialize};
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use voxi_core::{objects::value_json::get_field_to_str, ValueType};
 use web_sys::Event;
@@ -19,11 +16,11 @@ pub struct ComponentAtts {
     data: ComponentData,
 }
 
-#[derive(Clone, Default)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, Eq)]
 pub struct ComponentData {
-    value: serde_json::Value,
-    hint: Option<String>,
-    valid: bool,
+    pub value: serde_json::Value,
+    pub hint: Option<String>,
+    pub valid: bool,
 }
 
 impl ComponentData {
@@ -50,25 +47,26 @@ pub struct FormObject<T: Object> {
     component_read_signal: HashMap<String, ReadSignal<ComponentData>>,
     component_write_signal: HashMap<String, WriteSignal<ComponentData>>,
 
-    validators: Vec<Box<dyn ValidatorProvider>>,
+    validators: Vec<Box<dyn ValidatorProvider + 'static + Send + Sync>>,
 
     valid_read_signal: ReadSignal<bool>,
     hint_read_signal: ReadSignal<Option<String>>,
 }
 
 pub fn validators_by_field(
-    validators: &Vec<Box<dyn ValidatorProvider>>,
+    mut validators: Vec<Box<dyn ValidatorProvider + 'static + Send + Sync>>,
     field_name: &str,
-) -> Vec<Box<dyn ValidatorProvider>> {
+) -> Vec<Box<dyn ValidatorProvider + 'static + Send + Sync>> {
+    validators.retain(|v| v.field_name().name.name() == field_name);
     validators
-        .iter()
-        .filter(|v| v.field_name().name.name() == field_name)
-        .cloned()
-        .collect::<Vec<_>>()
 }
 
 impl<T: Object> FormObject<T> {
-    pub fn new(cx: Scope, object: T, validators: Vec<Box<dyn ValidatorProvider>>) -> Self {
+    pub fn new(
+        cx: Scope,
+        object: T,
+        validators: Vec<Box<dyn ValidatorProvider + 'static + Send + Sync>>,
+    ) -> Self {
         let (object_read_signal, object_write_signal) =
             create_signal(cx, JsonMap::try_from(object.clone()).unwrap());
 
@@ -82,7 +80,7 @@ impl<T: Object> FormObject<T> {
             let (read_signal, write_signal) = create_signal(cx, ComponentData::new(value.clone()));
             component_read_signal.insert(field_name.to_string(), read_signal);
 
-            let vs = validators_by_field(&validators, field_name);
+            let vs = validators_by_field(validators.clone(), field_name);
 
             // maybe use create_resource ???
 
@@ -311,10 +309,6 @@ impl<T: Object> FormObject<T> {
     pub fn read_signal(&self) -> ReadSignal<JsonMap<T>> {
         self.object_read_signal
     }
-
-    // pub fn write_signal(&self) -> WriteSignal<JsonMap<T>> {
-    //     self.objeto_write_signal
-    // }
 
     pub fn get(&self) -> T {
         let read_signal = self.read_signal();
