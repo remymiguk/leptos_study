@@ -1,6 +1,7 @@
 use crate::states::{
     app_state::{AppState, LoggedUser, StateSetter},
     form_object::*,
+    object_model::ObjectModel,
     validator::{ValidatorPassword, ValidatorProvider},
 };
 use leptos::*;
@@ -34,18 +35,20 @@ pub fn Login(cx: Scope) -> impl IntoView {
             as Box<dyn ValidatorProvider + 'static + Send + Sync>,
     ];
 
-    let fo = FormObject::new(cx, EmailPassword::default(), validators);
+    let model = ObjectModel::new(cx, EmailPassword::default(), validators);
 
-    let (read_signal, write_signal) = fo.signal();
+    let fo = FormObject::new(cx, model.clone());
+
+    let (read_signal, write_signal) = model.signal();
     view! {
         cx,
-            <div>{move ||format!("Object content: {:?}", read_signal().get())}</div>
+            <div>{move ||format!("Object content: {:?}", read_signal())}</div>
             <InputBind fo=&fo literal="E-mail" field_name="email" placeholder="User e-mail"/>
             <InputBind fo=&fo literal="Password" field_name="password" placeholder="User password"/>
             <br/><br/>
             <input type="button" value="Login" class="button is-danger"
                 on:click=move |_| {
-                    apply_login(cx, read_signal().get());
+                    apply_login(cx, read_signal());
                     history_back();
                 }
             />
