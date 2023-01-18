@@ -12,23 +12,27 @@ use voxi_core::{
 pub trait ValidatorProvider: Clone + std::fmt::Debug {
     async fn validate(&self, request: ValidatorRequest) -> Result<ValidatorResponse, String>;
 
-    fn field_name(&self) -> &FieldNameType;
+    fn trigger_field_name(&self) -> &FieldNameType;
 
-    fn sub_field_names(&self) -> &Vec<FieldNameType>;
+    fn input_fields_name(&self) -> &Vec<FieldNameType>;
 
-    fn fields(&self) -> Vec<&FieldNameType> {
-        let mut fields = vec![self.field_name()];
-        for f in self.sub_field_names() {
+    fn all_input_fields(&self) -> Vec<&FieldNameType> {
+        let mut fields = vec![self.trigger_field_name()];
+        for f in self.input_fields_name() {
             fields.push(f);
         }
         fields
     }
 
-    fn create_request(&self, object_j: &serde_json::Value, field_name: &str) -> ValidatorRequest {
-        let subset_values = object_j_to_subset_values(object_j, self.fields()).unwrap();
+    fn create_request(
+        &self,
+        object_j: &serde_json::Value,
+        trigger_field_name: &str,
+    ) -> ValidatorRequest {
+        let input_values = object_j_to_subset_values(object_j, self.all_input_fields()).unwrap();
         ValidatorRequest {
-            subset_values,
-            field_name: field_name.to_string(),
+            input_values,
+            trigger_field_name: trigger_field_name.to_string(),
         }
     }
 }
@@ -43,7 +47,7 @@ pub async fn exec_validator(
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct ValidatorPassword {
     field_name_type: FieldNameType,
-    sub_fields: Vec<FieldNameType>,
+    input_fields: Vec<FieldNameType>,
 }
 
 impl ValidatorPassword {
@@ -51,17 +55,17 @@ impl ValidatorPassword {
         let field_name_type = (v_type, field_name).into_field_name_type();
         Self {
             field_name_type,
-            sub_fields: Vec::default(),
+            input_fields: Vec::default(),
         }
     }
 
-    pub fn add(
+    pub fn add_input(
         mut self,
         v_type: impl IntoValueType,
         field_name: impl IntoFieldName,
     ) -> ValidatorPassword {
         let field_name_type = (v_type, field_name).into_field_name_type();
-        self.sub_fields.push(field_name_type);
+        self.input_fields.push(field_name_type);
         self
     }
 }
@@ -74,36 +78,36 @@ impl std::fmt::Display for ValidatorPassword {
 
 #[async_trait]
 impl ValidatorProvider for ValidatorPassword {
-    fn field_name(&self) -> &FieldNameType {
+    fn trigger_field_name(&self) -> &FieldNameType {
         &self.field_name_type
     }
 
-    fn sub_field_names(&self) -> &Vec<FieldNameType> {
-        &self.sub_fields
+    fn input_fields_name(&self) -> &Vec<FieldNameType> {
+        &self.input_fields
     }
 
     async fn validate(&self, request: ValidatorRequest) -> Result<ValidatorResponse, String> {
         #[derive(Serialize, Deserialize)]
-        struct Fields {
+        struct PasswordEmail {
             password: Option<String>,
             email: Option<String>,
         }
 
-        let mut fields: Fields = request.subset_values.object();
+        let mut input: PasswordEmail = request.input_values.object();
 
-        let mut password = fields.password.unwrap_or_default();
+        let mut password = input.password.unwrap_or_default();
         password.truncate(10);
 
-        fields.password = Some(password.clone());
+        input.password = Some(password.clone());
 
-        fields.email = Some(format!("{password}@gmail.com"));
+        input.email = Some(format!("{password}@gmail.com"));
 
-        let subset_values = SubsetValues::from_object(&fields, self.fields()).unwrap();
+        let subset_values = SubsetValues::from_object(&input, self.all_input_fields()).unwrap();
 
         let response = ValidatorResponse {
-            hint: Some(format!("hint: {:?}", fields.password)),
-            valid: fields.password.unwrap_or_default().len() % 2 == 0,
-            opt_subset_values: Some(subset_values),
+            hint: Some(format!("hint: {:?}", input.password)),
+            valid: input.password.unwrap_or_default().len() % 2 == 0,
+            opt_output_values: Some(subset_values),
         };
 
         info!("inside validator response: `{response:?}`");
@@ -114,22 +118,23 @@ impl ValidatorProvider for ValidatorPassword {
 
 #[derive(Debug, Clone)]
 pub struct ValidatorRequest {
-    pub field_name: String,
-    pub subset_values: SubsetValues,
+    pub trigger_field_name: String,
+    pub input_values: SubsetValues,
 }
 
 impl ValidatorRequest {
-    pub fn new(field_name: &str, subset_values: SubsetValues) -> Self {
+    pub fn new(trigger_field_name: &str, subset_values: SubsetValues) -> Self {
         Self {
-            field_name: field_name.to_string(),
-            subset_values,
+            trigger_field_name: trigger_field_name.to_string(),
+            input_values: subset_values,
         }
     }
 }
 
 impl PartialEq for ValidatorRequest {
     fn eq(&self, other: &Self) -> bool {
-        self.subset_values == other.subset_values && self.field_name == other.field_name
+        self.input_values == other.input_values
+            && self.trigger_field_name == other.trigger_field_name
     }
 }
 
@@ -161,5 +166,5 @@ impl ValidatorRequestCommand {
 pub struct ValidatorResponse {
     pub hint: Option<String>,
     pub valid: bool,
-    pub opt_subset_values: Option<SubsetValues>,
+    pub opt_output_values: Option<SubsetValues>,
 }

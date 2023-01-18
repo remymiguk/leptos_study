@@ -9,13 +9,13 @@ use leptos::*;
 use log::info;
 use serde::{Deserialize, Serialize};
 use std::marker::PhantomData;
-use voxi_core::{json_to_value, ValueType};
+use voxi_core::{json_to_value, objects::value_json::json_to_str, ValueType};
 use web_sys::Event;
 
 #[derive(Clone)]
 pub struct ComponentAtts {
     literal: String,
-    field_name: String,
+    trigger_field_name: String,
     v_type: ValueType,
     data: ComponentData,
 }
@@ -24,14 +24,13 @@ pub struct ComponentAtts {
 pub struct ComponentData {
     pub value: serde_json::Value,
     pub hint: Option<String>,
-    pub valid: bool,
+    pub valid: Option<bool>,
 }
 
 impl ComponentData {
     pub fn new(value: serde_json::Value) -> Self {
         Self {
             value,
-            valid: true,
             ..Default::default()
         }
     }
@@ -47,19 +46,19 @@ pub fn validators_by_field(
     mut validators: Vec<Box<dyn ValidatorProvider + 'static + Send + Sync>>,
     field_name: &str,
 ) -> Vec<Box<dyn ValidatorProvider + 'static + Send + Sync>> {
-    validators.retain(|v| v.field_name().name.name() == field_name);
+    validators.retain(|v| v.trigger_field_name().name.name() == field_name);
     validators
 }
 
 #[derive(Clone)]
 pub struct FormObject<T: Object> {
-    object_read_signal: Memo<ComponentMap>,
+    object_read_signal: Memo<(JsonMap<T>, ComponentMap)>,
     _phantom_data: PhantomData<T>,
     object_writer_signal: WriteSignal<T>,
 }
 
 impl<T: Object> FormObject<T> {
-    pub fn new(cx: Scope, object_model: ObjectModel<T>) -> Self {
+    pub fn new(object_model: ObjectModel<T>) -> Self {
         let object_read_signal = object_model.public_component_reader;
         let object_writer_signal = object_model.public_object_writer;
 
@@ -93,6 +92,12 @@ impl<T: Object> FormObject<T> {
         step: Option<usize>,
     ) -> impl IntoView {
         let content_signal = self.memo_content(cx, field_name.clone(), ValueType::String);
+        let content_s = move || {
+            let content_signal = content_signal();
+            info!("content_signal: `{content_signal:?}`");
+            content_signal.0
+        };
+
         let is_valid_signal = self.memo_valid(cx, field_name.clone());
         let hint_signal = self.memo_hint(cx, field_name.clone());
 
@@ -111,7 +116,7 @@ impl<T: Object> FormObject<T> {
                 let is_success = is_success_read().0;
                 view! {
                     cx,
-                    <p class="help {is_success}">{hint}</p>
+                    <p class={format!("help {is_success}")}>{hint}</p>
                 }
                 .into_view(cx)
             })
@@ -137,7 +142,7 @@ impl<T: Object> FormObject<T> {
                         inputmode={inputmode} {autofocus} {multiple} size={size} maxlength={maxlength}
                         min={min} max={max} pattern={pattern} width={width} height={height} step={step}
                         on:input=on_input
-                        prop:value=content_signal
+                        prop:value=content_s
                     />
                 </div>
                 { hint_bottom }
@@ -145,19 +150,23 @@ impl<T: Object> FormObject<T> {
         }
     }
 
-    fn memo_content(&self, cx: Scope, field_name: String, value_type: ValueType) -> Memo<String> {
+    fn memo_content(
+        &self,
+        cx: Scope,
+        field_name: String,
+        value_type: ValueType,
+    ) -> Memo<(String, JsonMap<T>)> {
         let read_signal = self.object_read_signal;
         create_memo(cx, move |_| {
             let json_map = read_signal();
-            let value_j = json_map.map().get(&field_name).unwrap().value.clone();
-            // TODO: create function json_to_str
-            let nullable = json_to_value(value_j, value_type).unwrap();
-            let value_s = nullable
-                .into_opt()
-                .map(|v| v.to_string())
-                .unwrap_or_default();
-            info!("inside memo field `{field_name}` value `{value_s}`");
-            value_s
+            let user_json = json_map.0;
+            let value_j = json_map.1.map().get(&field_name).unwrap().value.clone();
+
+            let value_s = json_to_str(value_j, value_type);
+            info!(
+                "inside memo content: `{field_name}` value: `{value_s}` user_json: `{user_json:?}`"
+            );
+            (value_s, user_json)
         })
     }
 
@@ -165,7 +174,7 @@ impl<T: Object> FormObject<T> {
         let read_signal = self.object_read_signal;
         create_memo(cx, move |_| {
             let json_map = read_signal();
-            json_map.map().get(&field_name).unwrap().hint.clone()
+            json_map.1.map().get(&field_name).unwrap().hint.clone()
         })
     }
 
@@ -173,7 +182,13 @@ impl<T: Object> FormObject<T> {
         let read_signal = self.object_read_signal;
         create_memo(cx, move |_| {
             let json_map = read_signal();
-            json_map.map().get(&field_name).unwrap().valid
+            json_map
+                .1
+                .map()
+                .get(&field_name)
+                .unwrap()
+                .valid
+                .unwrap_or_else(|| true)
         })
     }
 
@@ -183,7 +198,7 @@ impl<T: Object> FormObject<T> {
 
         move |e: Event| {
             let value_s = event_target_value(&e);
-            let mut form_map = JsonMap::new(read_signal.get().object());
+            let mut form_map = JsonMap::new(read_signal.get().1.object());
 
             let value_s = if value_s.is_empty() {
                 None

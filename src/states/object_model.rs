@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use super::{
     form_object::ComponentData,
     json_map::JsonMap,
@@ -10,11 +8,9 @@ use leptos::*;
 use log::info;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
+use std::collections::HashMap;
 use voxi_core::{
-    objects::{
-        sub_set_values::merge_values_to,
-        value_json::{get_field_to_str, modified_fields_name},
-    },
+    objects::value_json::{get_field_to_str, modified_fields_name},
     ValueType,
 };
 
@@ -85,7 +81,7 @@ impl ComponentMap {
 #[derive(Debug, Clone)]
 pub struct ObjectModel<T: Object> {
     pub public_object_writer: WriteSignal<T>,
-    pub public_component_reader: Memo<ComponentMap>,
+    pub public_component_reader: Memo<(JsonMap<T>, ComponentMap)>,
     pub public_object_reader: Memo<T>,
 }
 
@@ -130,33 +126,47 @@ impl<T: Object> ObjectModel<T> {
         };
 
         // Intercept validated and wait result
-        let component_map_reader = {
+        let public_component_reader = {
             let default_json_map = default_json_map.clone();
-            create_memo(cx, move |previous: Option<&(ComponentMap, JsonMap<T>)>| {
+            create_memo(cx, move |previous: Option<&(JsonMap<T>, ComponentMap)>| {
                 info!("3) wait validators result...");
                 let previous = previous.cloned().unwrap_or_else(|| {
                     (
-                        object_to_map_comp(&default_json_map),
                         default_json_map.clone(),
+                        object_to_map_comp(&default_json_map),
                     )
                 });
 
                 let component_map = diff_validated_reader.read();
 
-                let (new_json_map, component_map) = match component_map.as_ref().cloned() {
-                    Some(component_map) => component_map,
-                    None => return previous,
-                };
+                let (user_json_map, new_json_map, component_map) =
+                    match component_map.as_ref().cloned() {
+                        Some(component_map) => component_map,
+                        None => return previous,
+                    };
 
-                let mut full_map = previous.0.into_map();
+                let mut full_map = previous.clone().1.into_map();
 
+                // Update value to existing component date state
+                let map_j = new_json_map.map();
+                for (key, value) in map_j {
+                    full_map
+                        .entry(key.clone())
+                        .and_modify(|cd| cd.value = value.clone())
+                        .or_insert(value.clone().into());
+                }
+
+                // Update whole component data
                 for (field_name, component_data) in component_map.into_map() {
                     full_map.insert(field_name.clone(), component_data.clone());
                 }
 
-                let result = (full_map.into(), new_json_map);
-                info!("3) wait validators result: `{result:?}`");
-                result
+                let component_map = full_map.into();
+                info!("3) wait validators result: `{component_map:?}`");
+
+                info!("user_json_map `{user_json_map:?}`");
+
+                (user_json_map, component_map)
             })
         };
 
@@ -164,28 +174,24 @@ impl<T: Object> ObjectModel<T> {
         let public_object_reader = create_memo(cx, move |previous_object: Option<&T>| {
             info!("4) transform to object...");
 
-            let public_component_reader = component_map_reader();
-            let component_map = public_component_reader.0.into_map();
-            let new_json_map = public_component_reader.1;
-
             let previous_object = previous_object
                 .cloned()
                 .unwrap_or_else(|| default_json_map.clone().get());
+
             let mut object_j = serde_json::to_value(&previous_object).unwrap();
 
-            let mut map_object = object_j.as_object_mut().unwrap();
+            let map_object = object_j.as_object_mut().unwrap();
+
+            let public_component_reader = public_component_reader();
+            let component_map = public_component_reader.1.into_map();
 
             for (filed_name, component_data) in component_map {
                 map_object[&filed_name] = component_data.value;
             }
-            merge_values_to(new_json_map.into(), &mut map_object);
 
             info!("4) transform to object: `{object_j:?}`");
-
             serde_json::from_value(object_j).unwrap()
         });
-
-        let public_component_reader = create_memo(cx, move |_| component_map_reader().0);
 
         Self {
             public_object_writer,
@@ -208,13 +214,15 @@ fn object_to_map_comp<T: Serialize>(object: &T) -> ComponentMap {
 async fn exec_validators<T: Object>(
     validators: Vec<Box<dyn ValidatorProvider + 'static + Send + Sync>>,
     json_changed: JsonChanged<T>,
-) -> (JsonMap<T>, ComponentMap) {
-    info!("2) exec validators...");
+) -> (JsonMap<T>, JsonMap<T>, ComponentMap) {
+    info!("2) exec validators json_changed: `{json_changed:?}`...");
     let mut components_data = HashMap::<String, ComponentData>::new();
     let JsonChanged {
-        json_map: mut json_new,
+        json_map,
         fields_diff,
     } = json_changed;
+
+    let mut json_new = json_map.clone();
 
     // Iterate thru changed fields
     for field_diff_name in fields_diff {
@@ -238,8 +246,8 @@ async fn exec_validators<T: Object>(
                 // info!("inside create_action");
                 let response = exec_validator(validator, request).await.unwrap();
                 // If there are result values then update values
-                if let Some(subset_values) = response.opt_subset_values {
-                    let merged = subset_values.merge_to_j(json_new.clone().into());
+                if let Some(output_values) = response.opt_output_values {
+                    let merged = output_values.merge_to_j(json_new.clone().into());
 
                     json_new = JsonMap::new(merged);
 
@@ -254,13 +262,13 @@ async fn exec_validators<T: Object>(
                 let component_data = ComponentData {
                     value: field_value.clone(),
                     hint: response.hint,
-                    valid: response.valid,
+                    valid: Some(response.valid),
                 };
                 components_data.insert(field_diff_name.clone(), component_data);
             }
         }
     }
     let component_map = ComponentMap::new(components_data);
-    info!("2) exec validators `{component_map:?}`");
-    (json_new, component_map)
+    info!("2) exec validators component_map: `{component_map:?}` json_new: `{json_new:?}`");
+    (json_map, json_new, component_map)
 }

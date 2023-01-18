@@ -31,12 +31,12 @@ pub struct EmailPassword {
 #[component]
 pub fn Login(cx: Scope) -> impl IntoView {
     let validators = vec![Box::new(
-        ValidatorPassword::new(ValueType::String, "password").add(ValueType::String, "email"),
+        ValidatorPassword::new(ValueType::String, "password").add_input(ValueType::String, "email"),
     ) as Box<dyn ValidatorProvider + 'static + Send + Sync>];
 
     let model = ObjectModel::new(cx, EmailPassword::default(), validators);
 
-    let fo = FormObject::new(cx, model.clone());
+    let fo = FormObject::new(model.clone());
 
     let (read_signal, write_signal) = model.signal();
     view! {

@@ -10,6 +10,7 @@ crate-type = ["cdylib", "rlib"]
 
 voxi-core = { path = "../voxi-core", default-features = false, features = ["objects"]}
 
+email_address = "0.2.4"
 derive_builder = "0.11"
 dyn-clonable = "0.9.0"
 once_cell = "1.17"

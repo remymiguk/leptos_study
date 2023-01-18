@@ -3,7 +3,7 @@ use voxi_core::ValueType;
 
 #[derive(Clone)]
 pub struct FieldValueSetter {
-    pub field_name: String,
+    pub trigger_field_name: String,
     // pub map_state: Box<dyn MapStateTrait>,
     pub validator: Option<Box<dyn ValidatorProvider>>,
     pub value_type: ValueType,
