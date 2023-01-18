@@ -1,12 +1,13 @@
 use crate::states::{
     app_state::{AppState, LoggedUser, StateSetter},
+    email_validator::ValidatorEmail,
     form_object::*,
     object_model::ObjectModel,
-    validator::{ValidatorPassword, ValidatorProvider},
+    password_validator::ValidatorPassword,
+    validator::Validators,
 };
 use leptos::*;
 use serde::{Deserialize, Serialize};
-use voxi_core::ValueType;
 
 pub fn apply_login(cx: Scope, email_password: EmailPassword) {
     let set_app_state = use_context::<StateSetter<AppState>>(cx).unwrap().0;
@@ -30,9 +31,9 @@ pub struct EmailPassword {
 
 #[component]
 pub fn Login(cx: Scope) -> impl IntoView {
-    let validators = vec![Box::new(
-        ValidatorPassword::new(ValueType::String, "password").add_input(ValueType::String, "email"),
-    ) as Box<dyn ValidatorProvider + 'static + Send + Sync>];
+    let validators = Validators::new()
+        .add(ValidatorPassword::new())
+        .add(ValidatorEmail::new());
 
     let model = ObjectModel::new(cx, EmailPassword::default(), validators);
 
@@ -42,8 +43,8 @@ pub fn Login(cx: Scope) -> impl IntoView {
     view! {
         cx,
             <div>{move ||format!("Object content: {:?}", read_signal())}</div>
-            <InputBind fo=&fo literal="E-mail" field_name="email" placeholder="User e-mail"/>
-            <InputBind fo=&fo literal="Password" field_name="password" placeholder="User password"/>
+            <InputBind fo=&fo input_type="text" literal="E-mail" field_name="email" placeholder="User e-mail"/>
+            <InputBind fo=&fo input_type="password" literal="Password" field_name="password" placeholder="User password"/>
             <br/><br/>
             <input type="button" value="Login" class="button is-danger"
                 on:click=move |_| {

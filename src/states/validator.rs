@@ -1,10 +1,9 @@
 use async_trait::async_trait;
 use dyn_clonable::clonable;
-use log::info;
-use serde::{Deserialize, Serialize};
+use serde::{de::DeserializeOwned, Serialize};
 use voxi_core::{
     objects::sub_set_values::{object_j_to_subset_values, SubsetValues},
-    FieldNameType, IntoFieldName, IntoFieldNameType, IntoValueType,
+    FieldNameType,
 };
 
 #[clonable]
@@ -44,75 +43,34 @@ pub async fn exec_validator(
     validator.validate(request).await
 }
 
-#[derive(Clone, PartialEq, Eq, Debug)]
-pub struct ValidatorPassword {
-    field_name_type: FieldNameType,
-    input_fields: Vec<FieldNameType>,
+pub struct Validators {
+    validators: Vec<Box<dyn ValidatorProvider + 'static + Send + Sync>>,
 }
 
-impl ValidatorPassword {
-    pub fn new(v_type: impl IntoValueType, field_name: impl IntoFieldName) -> Self {
-        let field_name_type = (v_type, field_name).into_field_name_type();
-        Self {
-            field_name_type,
-            input_fields: Vec::default(),
-        }
+impl Validators {
+    pub fn new() -> Self {
+        Self { validators: vec![] }
     }
 
-    pub fn add_input(
-        mut self,
-        v_type: impl IntoValueType,
-        field_name: impl IntoFieldName,
-    ) -> ValidatorPassword {
-        let field_name_type = (v_type, field_name).into_field_name_type();
-        self.input_fields.push(field_name_type);
+    pub fn add(mut self, validator: impl ValidatorProvider + 'static + Send + Sync) -> Self {
+        self.validators.push(Box::new(validator));
         self
     }
-}
 
-impl std::fmt::Display for ValidatorPassword {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:?}", self.field_name_type)
+    pub fn into_vec(self) -> Vec<Box<dyn ValidatorProvider + 'static + Send + Sync>> {
+        self.into()
     }
 }
 
-#[async_trait]
-impl ValidatorProvider for ValidatorPassword {
-    fn trigger_field_name(&self) -> &FieldNameType {
-        &self.field_name_type
+impl From<Vec<Box<dyn ValidatorProvider + 'static + Send + Sync>>> for Validators {
+    fn from(value: Vec<Box<dyn ValidatorProvider + 'static + Send + Sync>>) -> Self {
+        Self { validators: value }
     }
+}
 
-    fn input_fields_name(&self) -> &Vec<FieldNameType> {
-        &self.input_fields
-    }
-
-    async fn validate(&self, request: ValidatorRequest) -> Result<ValidatorResponse, String> {
-        #[derive(Serialize, Deserialize)]
-        struct PasswordEmail {
-            password: Option<String>,
-            email: Option<String>,
-        }
-
-        let mut input: PasswordEmail = request.input_values.object();
-
-        let mut password = input.password.unwrap_or_default();
-        password.truncate(10);
-
-        input.password = Some(password.clone());
-
-        input.email = Some(format!("{password}@gmail.com"));
-
-        let subset_values = SubsetValues::from_object(&input, self.all_input_fields()).unwrap();
-
-        let response = ValidatorResponse {
-            hint: Some(format!("hint: {:?}", input.password)),
-            valid: input.password.unwrap_or_default().len() % 2 == 0,
-            opt_output_values: Some(subset_values),
-        };
-
-        info!("inside validator response: `{response:?}`");
-
-        Ok(response)
+impl From<Validators> for Vec<Box<dyn ValidatorProvider + 'static + Send + Sync>> {
+    fn from(value: Validators) -> Self {
+        value.validators
     }
 }
 
@@ -165,6 +123,6 @@ impl ValidatorRequestCommand {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ValidatorResponse {
     pub hint: Option<String>,
-    pub valid: bool,
+    pub is_valid: bool,
     pub opt_output_values: Option<SubsetValues>,
 }

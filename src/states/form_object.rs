@@ -1,4 +1,5 @@
 use super::{
+    input_type::InputType,
     json_map::JsonMap,
     object_model::{ComponentMap, ObjectModel},
     validator::ValidatorProvider,
@@ -65,6 +66,7 @@ impl<T: Object> FormObject<T> {
     pub fn input_bind_text(
         &self,
         cx: Scope,
+        input_type: InputType,
         literal: String,
         field_name: String,
         readonly: Option<bool>,
@@ -129,7 +131,7 @@ impl<T: Object> FormObject<T> {
             <div class="field">
                 <label class="label">{literal}</label>
                 <div class={classes_div}>
-                    <input class={classes_input} type="text"
+                    <input class={classes_input} type={input_type.to_string()}
                         {readonly} {disabled} {required} placeholder={placeholder}
                         inputmode={inputmode} {autofocus} {multiple} size={size} maxlength={maxlength}
                         min={min} max={max} pattern={pattern} width={width} height={height} step={step}
@@ -212,6 +214,7 @@ impl<T: Object> FormObject<T> {
 pub fn InputBind<T, 'a>(
     cx: Scope,
     fo: &'a FormObject<T>,
+    #[prop(into)] input_type: InputType,
     #[prop(into)] literal: String,
     #[prop(into)] field_name: String,
     #[prop(optional)] readonly: Option<bool>,
@@ -238,7 +241,7 @@ where
     view! {
         cx,
         <>
-            {fo.input_bind_text(cx, literal, field_name, readonly, disabled, required, placeholder, inputmode,
+            {fo.input_bind_text(cx, input_type, literal, field_name, readonly, disabled, required, placeholder, inputmode,
                 autofocus, multiple, size, maxlength, min, max, pattern, width, height, step,
             )}
         </>

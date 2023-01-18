@@ -57,3 +57,39 @@ impl fmt::Display for InputType {
         write!(f, "{}", s)
     }
 }
+
+impl From<String> for InputType {
+    fn from(value: String) -> Self {
+        (&value[..]).into()
+    }
+}
+
+impl From<&str> for InputType {
+    fn from(value: &str) -> Self {
+        match value {
+            "button" => InputType::Button,
+            "checkbox" => InputType::Checkbox,
+            "color" => InputType::Color,
+            "date" => InputType::Date,
+            "datetime-local" => InputType::DatetimeLocal,
+            "email" => InputType::Email,
+            "file" => InputType::File,
+            "hidden" => InputType::Hidden,
+            "image" => InputType::Image,
+            "month" => InputType::Month,
+            "week" => InputType::Week,
+            "range" => InputType::Range,
+            "number" => InputType::Number,
+            "password" => InputType::Password,
+            "radio" => InputType::Radio,
+            "reset" => InputType::Reset,
+            "search" => InputType::Search,
+            "submit" => InputType::Submit,
+            "tel" => InputType::Tel,
+            "time" => InputType::Time,
+            "url" => InputType::Url,
+            "text" => InputType::Text,
+            _ => InputType::Text,
+        }
+    }
+}

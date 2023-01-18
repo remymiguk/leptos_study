@@ -10,3 +10,5 @@ pub mod json_map;
 pub mod object;
 pub mod object_model;
 pub mod validator;
+pub mod password_validator;
+pub mod email_validator;

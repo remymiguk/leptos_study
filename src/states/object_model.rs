@@ -1,7 +1,7 @@
 use super::{
     form_object::ComponentData,
     json_map::JsonMap,
-    validator::{exec_validator, ValidatorProvider},
+    validator::{exec_validator, ValidatorProvider, Validators},
 };
 use crate::states::{form_object::validators_by_field, object::Object};
 use leptos::*;
@@ -90,11 +90,10 @@ impl<T: Object> ObjectModel<T> {
         (self.public_object_reader, self.public_object_writer)
     }
 
-    pub fn new(
-        cx: Scope,
-        object: T,
-        validators: Vec<Box<dyn ValidatorProvider + 'static + Send + Sync>>,
-    ) -> Self {
+    pub fn new(cx: Scope, object: T, validators: impl Into<Validators>) -> Self {
+        let validators: Validators = validators.into();
+        let validators = validators.into_vec();
+
         let default_json_map = JsonMap::new(object.clone());
 
         let (public_to_validate, public_object_writer) = create_signal(cx, object.clone());
@@ -228,6 +227,7 @@ async fn exec_validators<T: Object>(
         let validators = validators_by_field(validators.clone(), &field_diff_name);
 
         for validator in validators {
+            info!("found validator for {field_diff_name:?}!");
             // Create validator request
             let request =
                 validator.create_request(&json_map.clone().into(), &field_diff_name.clone());
@@ -251,7 +251,7 @@ async fn exec_validators<T: Object>(
                 .entry(field_diff_name.clone())
                 .and_modify(|cd| {
                     cd.hint = response.hint;
-                    cd.valid = Some(response.valid);
+                    cd.valid = Some(response.is_valid);
                 });
         }
     }
