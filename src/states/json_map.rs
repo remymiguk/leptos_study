@@ -6,7 +6,7 @@ use voxi_core::{
     ValueType,
 };
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Default, Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct JsonMap<T: Object> {
     #[serde(skip)]
     _phantom: PhantomData<T>,

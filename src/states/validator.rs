@@ -1,5 +1,6 @@
 use async_trait::async_trait;
 use dyn_clonable::clonable;
+use log::info;
 use serde::{Deserialize, Serialize};
 use voxi_core::{
     objects::sub_set_values::{object_j_to_subset_values, SubsetValues},
@@ -54,9 +55,14 @@ impl ValidatorPassword {
         }
     }
 
-    pub fn add(&mut self, v_type: impl IntoValueType, field_name: impl IntoFieldName) {
+    pub fn add(
+        mut self,
+        v_type: impl IntoValueType,
+        field_name: impl IntoFieldName,
+    ) -> ValidatorPassword {
         let field_name_type = (v_type, field_name).into_field_name_type();
         self.sub_fields.push(field_name_type);
+        self
     }
 }
 
@@ -99,6 +105,8 @@ impl ValidatorProvider for ValidatorPassword {
             valid: fields.password.unwrap_or_default().len() % 2 == 0,
             opt_subset_values: Some(subset_values),
         };
+
+        info!("inside validator response: `{response:?}`");
 
         Ok(response)
     }

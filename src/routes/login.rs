@@ -30,10 +30,9 @@ pub struct EmailPassword {
 
 #[component]
 pub fn Login(cx: Scope) -> impl IntoView {
-    let validators = vec![
-        Box::new(ValidatorPassword::new(ValueType::String, "password"))
-            as Box<dyn ValidatorProvider + 'static + Send + Sync>,
-    ];
+    let validators = vec![Box::new(
+        ValidatorPassword::new(ValueType::String, "password").add(ValueType::String, "email"),
+    ) as Box<dyn ValidatorProvider + 'static + Send + Sync>];
 
     let model = ObjectModel::new(cx, EmailPassword::default(), validators);
 

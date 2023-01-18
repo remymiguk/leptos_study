@@ -111,7 +111,7 @@ impl<T: Object> FormObject<T> {
                 let is_success = is_success_read().0;
                 view! {
                     cx,
-                    <p class="help {is_success}"> { "hint" }</p>
+                    <p class="help {is_success}">{hint}</p>
                 }
                 .into_view(cx)
             })
@@ -156,7 +156,7 @@ impl<T: Object> FormObject<T> {
                 .into_opt()
                 .map(|v| v.to_string())
                 .unwrap_or_default();
-            info!("**** inside memo {value_s} ...");
+            info!("inside memo field `{field_name}` value `{value_s}`");
             value_s
         })
     }
