@@ -139,24 +139,13 @@ impl<T: Object> ObjectModel<T> {
 
                 let component_map = diff_validated_reader.read();
 
-                let (user_json_map, new_json_map, component_map) =
-                    match component_map.as_ref().cloned() {
-                        Some(component_map) => component_map,
-                        None => return previous,
-                    };
+                let (user_json_map, component_map) = match component_map.as_ref().cloned() {
+                    Some(component_map) => component_map,
+                    None => return previous,
+                };
 
+                // Update whole previous component map with new states
                 let mut full_map = previous.clone().1.into_map();
-
-                // Update value to existing component date state
-                let map_j = new_json_map.map();
-                for (key, value) in map_j {
-                    full_map
-                        .entry(key.clone())
-                        .and_modify(|cd| cd.value = value.clone())
-                        .or_insert(value.clone().into());
-                }
-
-                // Update whole component data
                 for (field_name, component_data) in component_map.into_map() {
                     full_map.insert(field_name.clone(), component_data.clone());
                 }
@@ -214,61 +203,59 @@ fn object_to_map_comp<T: Serialize>(object: &T) -> ComponentMap {
 async fn exec_validators<T: Object>(
     validators: Vec<Box<dyn ValidatorProvider + 'static + Send + Sync>>,
     json_changed: JsonChanged<T>,
-) -> (JsonMap<T>, JsonMap<T>, ComponentMap) {
+) -> (JsonMap<T>, ComponentMap) {
     info!("2) exec validators json_changed: `{json_changed:?}`...");
-    let mut components_data = HashMap::<String, ComponentData>::new();
     let JsonChanged {
         json_map,
         fields_diff,
     } = json_changed;
 
-    let mut json_new = json_map.clone();
+    let mut components_data = HashMap::<String, ComponentData>::new();
 
-    // Iterate thru changed fields
-    for field_diff_name in fields_diff {
-        // Get validators from each field name
-        let validators = validators_by_field(validators.clone(), &field_diff_name);
-
-        let mut field_value = json_new
+    // Initialize component datas with values, assuming is valid and without hint
+    for field_diff_name in &fields_diff {
+        let field_value = json_map
             .object()
             .get(&field_diff_name)
             .cloned()
             .unwrap_or(().into());
+        components_data.insert(field_diff_name.clone(), field_value.into());
+    }
 
-        if validators.is_empty() {
-            components_data.insert(field_diff_name.clone(), field_value.into());
-        } else {
-            for validator in validators {
-                // Create validator request
-                let request =
-                    validator.create_request(&json_new.clone().into(), &field_diff_name.clone());
-                // Execute validation
-                // info!("inside create_action");
-                let response = exec_validator(validator, request).await.unwrap();
-                // If there are result values then update values
-                if let Some(output_values) = response.opt_output_values {
-                    let merged = output_values.merge_to_j(json_new.clone().into());
+    // Iterate thru changed fields
+    for field_diff_name in &fields_diff {
+        // Get validators from each field name
+        let validators = validators_by_field(validators.clone(), &field_diff_name);
 
-                    json_new = JsonMap::new(merged);
-
-                    // Retrieving new value
-                    field_value = json_new
-                        .object()
-                        .get(&field_diff_name)
-                        .cloned()
-                        .unwrap_or(().into());
+        for validator in validators {
+            // Create validator request
+            let request =
+                validator.create_request(&json_map.clone().into(), &field_diff_name.clone());
+            // Execute validation
+            // info!("inside create_action");
+            let response = exec_validator(validator, request).await.unwrap();
+            // If there are result values then update values
+            if let Some(output_values) = response.opt_output_values {
+                // Populate all output values
+                let merged = output_values.merge_to_j(json_map.clone().into());
+                let merged_map = merged.as_object().unwrap();
+                for (key, value) in merged_map {
+                    components_data
+                        .entry(key.clone())
+                        .and_modify(|cd| cd.value = value.clone())
+                        .or_insert(value.clone().into());
                 }
-
-                let component_data = ComponentData {
-                    value: field_value.clone(),
-                    hint: response.hint,
-                    valid: Some(response.valid),
-                };
-                components_data.insert(field_diff_name.clone(), component_data);
             }
+            // Update with response
+            components_data
+                .entry(field_diff_name.clone())
+                .and_modify(|cd| {
+                    cd.hint = response.hint;
+                    cd.valid = Some(response.valid);
+                });
         }
     }
     let component_map = ComponentMap::new(components_data);
-    info!("2) exec validators component_map: `{component_map:?}` json_new: `{json_new:?}`");
-    (json_map, json_new, component_map)
+    info!("2) exec validators component_map: `{component_map:?}` json_map: `{json_map:?}`");
+    (json_map, component_map)
 }

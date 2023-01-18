@@ -9,16 +9,8 @@ use leptos::*;
 use log::info;
 use serde::{Deserialize, Serialize};
 use std::marker::PhantomData;
-use voxi_core::{json_to_value, objects::value_json::json_to_str, ValueType};
+use voxi_core::{objects::value_json::json_to_str, ValueType};
 use web_sys::Event;
-
-#[derive(Clone)]
-pub struct ComponentAtts {
-    literal: String,
-    trigger_field_name: String,
-    v_type: ValueType,
-    data: ComponentData,
-}
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, Eq)]
 pub struct ComponentData {
@@ -101,7 +93,7 @@ impl<T: Object> FormObject<T> {
         let is_valid_signal = self.memo_valid(cx, field_name.clone());
         let hint_signal = self.memo_hint(cx, field_name.clone());
 
-        let on_input = self.event_to_map(cx, field_name, ValueType::String);
+        let on_input = self.event_to_map(field_name, ValueType::String);
 
         let is_success_read = create_memo(cx, move |_| {
             if is_valid_signal() {
@@ -192,7 +184,7 @@ impl<T: Object> FormObject<T> {
         })
     }
 
-    fn event_to_map(&self, cx: Scope, field_name: String, value_type: ValueType) -> impl Fn(Event) {
+    fn event_to_map(&self, field_name: String, value_type: ValueType) -> impl Fn(Event) {
         let read_signal = self.object_read_signal;
         let write_signal = self.object_writer_signal;
 
