@@ -10,7 +10,10 @@ use serde::{Deserialize, Serialize};
 use serde_json::json;
 use std::collections::HashMap;
 use voxi_core::{
-    objects::value_json::{get_field_to_str, modified_fields_name},
+    objects::value_json::{
+        fields_names_from_object, get_field_to_str, json_to_map, modified_fields_name,
+        value_from_object,
+    },
     ValueType,
 };
 
@@ -94,10 +97,48 @@ impl<T: Object> ObjectModel<T> {
         let validators: Validators = validators.into();
         let validators = validators.into_vec();
 
-        let default_json_map = JsonMap::new(object.clone());
-
+        // 1) Create signals to global T object
         let (public_to_validate, public_object_writer) = create_signal(cx, object.clone());
 
+        // 2) Create signals per field
+        let mut fields_reader = HashMap::new();
+        for field_name in fields_names_from_object(&object.clone()) {
+            let field_reader = {
+                let field_name = field_name.clone();
+                create_memo(cx, move |_| {
+                    let object = public_to_validate();
+                    value_from_object(&object, &field_name)
+                })
+            };
+            fields_reader.insert(field_name.clone(), field_reader);
+        }
+
+        // 3) Create signal per field + validators
+        //      for each validator should read input fields
+        for validator in validators.iter() {
+            let input_readers = validator
+                .all_input_fields()
+                .iter()
+                .map(|fnt| {
+                    (
+                        fnt.name.name().to_string(),
+                        fields_reader.get(fnt.name.name()).unwrap().clone(),
+                    )
+                })
+                .collect::<HashMap<_, _>>();
+
+            create_resource(
+                cx,
+                || input_readers,
+                move |json_changed| exec_validators_map(validators.clone(), json_changed),
+            );
+        }
+
+        //
+        //
+        //
+
+        let default_json_map = JsonMap::new(object.clone());
         // Intercept public change and extract the changed fields (diff)
         let diff_json_reader = {
             let default_json_map = default_json_map.clone();
@@ -197,6 +238,19 @@ fn object_to_map_comp<T: Serialize>(object: &T) -> ComponentMap {
         components_data.insert(name.clone(), value.clone().into());
     }
     ComponentMap::new(components_data)
+}
+
+async fn exec_validators_map(
+    hash_map: HashMap<String, Memo<serde_json::Value>>,
+    validators: Vec<Box<dyn ValidatorProvider + 'static + Send + Sync>>,
+) {
+    let mut j = json!({});
+    let map_j = j.as_object_mut().unwrap();
+    for (field_name, value) in hash_map {
+        map_j.insert(field_name, value());
+    }
+    todo!()
+    // complete with function below
 }
 
 async fn exec_validators<T: Object>(
