@@ -18,12 +18,12 @@ use voxi_core::{
 };
 
 #[derive(Clone, PartialEq, Eq, Debug)]
-pub struct JsonChanged<T: Object> {
+pub struct JsonDiff<T: Object> {
     json_map: JsonMap<T>,
     fields_diff: Vec<String>,
 }
 
-impl<T: Object> JsonChanged<T> {
+impl<T: Object> JsonDiff<T> {
     pub fn new(json_map: JsonMap<T>, diff: Vec<String>) -> Self {
         Self {
             json_map,
@@ -97,6 +97,10 @@ impl<T: Object> ObjectModel<T> {
         let validators: Validators = validators.into();
         let validators = validators.into_vec();
 
+        //
+        //
+        //
+
         // 1) Create signals to global T object
         let (public_to_validate, public_object_writer) = create_signal(cx, object.clone());
 
@@ -115,7 +119,14 @@ impl<T: Object> ObjectModel<T> {
 
         // 3) Create signal per field + validators
         //      for each validator should read input fields
+        let mut validators_reader = HashMap::new();
         for validator in validators.iter() {
+            let mut previous_validator_result = None;
+            let trigger_reader = fields_reader
+                .get(validator.trigger_field_name().name.name())
+                .unwrap()
+                .clone();
+
             let input_readers = validator
                 .all_input_fields()
                 .iter()
@@ -127,11 +138,17 @@ impl<T: Object> ObjectModel<T> {
                 })
                 .collect::<HashMap<_, _>>();
 
-            create_resource(
+            // TODO:
+            // to consider the "input_json":
+            // (Option<PreviousValidatorResult>, input_readers)
+
+            let validator_reader = create_resource(
                 cx,
-                || input_readers,
+                || trigger_reader,
                 move |json_changed| exec_validators_map(validators.clone(), json_changed),
             );
+            previous_validator_result = Some(validator_reader.clone());
+            validators_reader.insert(validator, previous_validator_result);
         }
 
         //
@@ -142,18 +159,18 @@ impl<T: Object> ObjectModel<T> {
         // Intercept public change and extract the changed fields (diff)
         let diff_json_reader = {
             let default_json_map = default_json_map.clone();
-            create_memo(cx, move |previous_json_map: Option<&JsonChanged<T>>| {
+            create_memo(cx, move |previous_diff: Option<&JsonDiff<T>>| {
                 info!("1) inside to validate...");
                 let object = public_to_validate();
                 let json_new = JsonMap::new(object);
                 // Try get previous object values
-                let json_old = match previous_json_map {
-                    Some(json_changed) => json_changed.json_map.clone(),
+                let json_old = match previous_diff {
+                    Some(json_diff) => json_diff.json_map.clone(),
                     None => default_json_map.clone().into(),
                 };
                 // Generate diff with the changes
-                let diff = modified_fields_name(json_old, json_new.clone());
-                JsonChanged::new(json_new, diff)
+                let diffs = modified_fields_name(json_old, json_new.clone());
+                JsonDiff::new(json_new, diffs)
             })
         };
 
@@ -240,25 +257,33 @@ fn object_to_map_comp<T: Serialize>(object: &T) -> ComponentMap {
     ComponentMap::new(components_data)
 }
 
-async fn exec_validators_map(
-    hash_map: HashMap<String, Memo<serde_json::Value>>,
-    validators: Vec<Box<dyn ValidatorProvider + 'static + Send + Sync>>,
-) {
+fn map_reader_to_json(map_reader: &HashMap<String, Memo<serde_json::Value>>) -> serde_json::Value {
     let mut j = json!({});
     let map_j = j.as_object_mut().unwrap();
     for (field_name, value) in hash_map {
         map_j.insert(field_name, value());
     }
+    j
+}
+
+async fn exec_validators_map(
+    input_value: serde_json::Value,
+    validator: Box<dyn ValidatorProvider + 'static + Send + Sync>,
+) {
+    let j = map_reader_to_json(&hash_map);
+    validator.create_request(object_j, trigger_field_name);
+    let result = validator.validate(&input_value).await.unwrap();
     todo!()
+
     // complete with function below
 }
 
 async fn exec_validators<T: Object>(
     validators: Vec<Box<dyn ValidatorProvider + 'static + Send + Sync>>,
-    json_changed: JsonChanged<T>,
+    json_changed: JsonDiff<T>,
 ) -> (JsonMap<T>, ComponentMap) {
     info!("2) exec validators json_changed: `{json_changed:?}`...");
-    let JsonChanged {
+    let JsonDiff {
         json_map,
         fields_diff,
     } = json_changed;
