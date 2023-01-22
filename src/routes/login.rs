@@ -1,10 +1,13 @@
-use crate::states::{
-    app_state::{AppState, LoggedUser, StateSetter},
-    email_validator::ValidatorEmail,
-    form_object::*,
-    object_model::ObjectModel,
-    password_validator::ValidatorPassword,
-    validator::Validators,
+use crate::{
+    components::modal::create_confirmation,
+    states::{
+        app_state::{AppState, LoggedUser, StateSetter},
+        email_validator::ValidatorEmail,
+        form_object::*,
+        object_model::ObjectModel,
+        password_validator::ValidatorPassword,
+        validator::Validators,
+    },
 };
 use leptos::*;
 use serde::{Deserialize, Serialize};
@@ -40,6 +43,8 @@ pub fn Login(cx: Scope) -> impl IntoView {
     let fo = FormObject::new(model.clone());
 
     let (read_signal, write_signal) = model.signal();
+
+    let confirmation = create_confirmation(cx);
     view! {
         cx,
             <div>{move ||format!("Object content: {:?}", read_signal())}</div>

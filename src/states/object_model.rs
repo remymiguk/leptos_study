@@ -10,10 +10,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::json;
 use std::collections::HashMap;
 use voxi_core::{
-    objects::value_json::{
-        fields_names_from_object, get_field_to_str, json_to_map, modified_fields_name,
-        value_from_object,
-    },
+    objects::value_json::{fields_names_from_object, get_field_to_str, modified_fields_name},
     ValueType,
 };
 
@@ -104,52 +101,52 @@ impl<T: Object> ObjectModel<T> {
         // 1) Create signals to global T object
         let (public_to_validate, public_object_writer) = create_signal(cx, object.clone());
 
-        // 2) Create signals per field
-        let mut fields_reader = HashMap::new();
-        for field_name in fields_names_from_object(&object.clone()) {
-            let field_reader = {
-                let field_name = field_name.clone();
-                create_memo(cx, move |_| {
-                    let object = public_to_validate();
-                    value_from_object(&object, &field_name)
-                })
-            };
-            fields_reader.insert(field_name.clone(), field_reader);
-        }
+        // // 2) Create signals per field
+        // let mut fields_reader = HashMap::new();
+        // for field_name in fields_names_from_object(&object.clone()) {
+        //     let field_reader = {
+        //         let field_name = field_name.clone();
+        //         create_memo(cx, move |_| {
+        //             let object = public_to_validate();
+        //             value_from_object(&object, &field_name)
+        //         })
+        //     };
+        //     fields_reader.insert(field_name.clone(), field_reader);
+        // }
 
-        // 3) Create signal per field + validators
-        //      for each validator should read input fields
-        let mut validators_reader = HashMap::new();
-        for validator in validators.iter() {
-            let mut previous_validator_result = None;
-            let trigger_reader = fields_reader
-                .get(validator.trigger_field_name().name.name())
-                .unwrap()
-                .clone();
+        // // 3) Create signal per field + validators
+        // //      for each validator should read input fields
+        // let mut validators_reader = HashMap::new();
+        // for validator in validators.iter() {
+        //     let mut previous_validator_result = None;
+        //     let trigger_reader = fields_reader
+        //         .get(validator.trigger_field_name().name.name())
+        //         .unwrap()
+        //         .clone();
 
-            let input_readers = validator
-                .all_input_fields()
-                .iter()
-                .map(|fnt| {
-                    (
-                        fnt.name.name().to_string(),
-                        fields_reader.get(fnt.name.name()).unwrap().clone(),
-                    )
-                })
-                .collect::<HashMap<_, _>>();
+        //     let input_readers = validator
+        //         .all_input_fields()
+        //         .iter()
+        //         .map(|fnt| {
+        //             (
+        //                 fnt.name.name().to_string(),
+        //                 fields_reader.get(fnt.name.name()).unwrap().clone(),
+        //             )
+        //         })
+        //         .collect::<HashMap<_, _>>();
 
-            // TODO:
-            // to consider the "input_json":
-            // (Option<PreviousValidatorResult>, input_readers)
+        //     // TODO:
+        //     // to consider the "input_json":
+        //     // (Option<PreviousValidatorResult>, input_readers)
 
-            let validator_reader = create_resource(
-                cx,
-                || trigger_reader,
-                move |json_changed| exec_validators_map(validators.clone(), json_changed),
-            );
-            previous_validator_result = Some(validator_reader.clone());
-            validators_reader.insert(validator, previous_validator_result);
-        }
+        //     let validator_reader = create_resource(
+        //         cx,
+        //         || trigger_reader,
+        //         move |json_changed| exec_validators_map(validators.clone(), json_changed),
+        //     );
+        //     previous_validator_result = Some(validator_reader.clone());
+        //     validators_reader.insert(validator, previous_validator_result);
+        // }
 
         //
         //
@@ -257,26 +254,26 @@ fn object_to_map_comp<T: Serialize>(object: &T) -> ComponentMap {
     ComponentMap::new(components_data)
 }
 
-fn map_reader_to_json(map_reader: &HashMap<String, Memo<serde_json::Value>>) -> serde_json::Value {
-    let mut j = json!({});
-    let map_j = j.as_object_mut().unwrap();
-    for (field_name, value) in hash_map {
-        map_j.insert(field_name, value());
-    }
-    j
-}
+// fn map_reader_to_json(map_reader: &HashMap<String, Memo<serde_json::Value>>) -> serde_json::Value {
+//     let mut j = json!({});
+//     let map_j = j.as_object_mut().unwrap();
+//     for (field_name, value) in hash_map {
+//         map_j.insert(field_name, value());
+//     }
+//     j
+// }
 
-async fn exec_validators_map(
-    input_value: serde_json::Value,
-    validator: Box<dyn ValidatorProvider + 'static + Send + Sync>,
-) {
-    let j = map_reader_to_json(&hash_map);
-    validator.create_request(object_j, trigger_field_name);
-    let result = validator.validate(&input_value).await.unwrap();
-    todo!()
+// async fn exec_validators_map(
+//     input_value: serde_json::Value,
+//     validator: Box<dyn ValidatorProvider + 'static + Send + Sync>,
+// ) {
+//     let j = map_reader_to_json(&hash_map);
+//     validator.create_request(object_j, trigger_field_name);
+//     let result = validator.validate(&input_value).await.unwrap();
+//     todo!()
 
-    // complete with function below
-}
+//     // complete with function below
+// }
 
 async fn exec_validators<T: Object>(
     validators: Vec<Box<dyn ValidatorProvider + 'static + Send + Sync>>,
