@@ -1,13 +1,11 @@
-use crate::{
-    components::modal::create_confirmation,
-    states::{
-        app_state::{AppState, LoggedUser, StateSetter},
-        email_validator::ValidatorEmail,
-        form_object::*,
-        object_model::ObjectModel,
-        password_validator::ValidatorPassword,
-        validator::Validators,
-    },
+use crate::components::modal::Confirmation;
+use crate::states::{
+    app_state::{AppState, LoggedUser, StateSetter},
+    email_validator::ValidatorEmail,
+    form_object::*,
+    object_model::ObjectModel,
+    password_validator::ValidatorPassword,
+    validator::Validators,
 };
 use leptos::*;
 use serde::{Deserialize, Serialize};
@@ -44,7 +42,12 @@ pub fn Login(cx: Scope) -> impl IntoView {
 
     let (read_signal, write_signal) = model.signal();
 
-    let confirmation = create_confirmation(cx);
+    let clear = move |_| write_signal.set(EmailPassword::default().into());
+
+    let confirmation = Confirmation::new(cx);
+    let on_show = confirmation.on_show();
+
+    let confirm_clear = confirmation.component(cx, clear);
     view! {
         cx,
             <div>{move ||format!("Object content: {:?}", read_signal())}</div>
@@ -59,7 +62,7 @@ pub fn Login(cx: Scope) -> impl IntoView {
             />
             <br/><br/>
             <input type="button" value="Clear" class="button is-danger"
-                on:click=move |_| write_signal.set(EmailPassword::default().into())
+                on:click=on_show
             />
 
     }

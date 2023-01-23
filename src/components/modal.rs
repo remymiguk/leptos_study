@@ -2,34 +2,55 @@ use leptos::*;
 use leptos_router::*;
 use web_sys::MouseEvent;
 
-pub fn create_confirmation<F, S>(cx: Scope, on_confirm: F, on_show: S) -> impl IntoView
-where
-    F: Fn(MouseEvent) + 'static,
-    S: Fn() + 'static,
-{
-    let (is_active_read, is_active_write) = create_signal(cx, false);
-    view! {
-        cx,
-        <Modal
-            is_active_write
-            is_active_read
-            on_confirm,
-            on_show
-        />
+pub struct Confirmation {
+    is_active_write: WriteSignal<bool>,
+    is_active_read: ReadSignal<bool>,
+}
+
+impl Confirmation {
+    pub fn new(cx: Scope) -> Self {
+        let (is_active_read, is_active_write) = create_signal(cx, false);
+        Self {
+            is_active_write,
+            is_active_read,
+        }
+    }
+
+    pub fn component<F>(&self, cx: Scope, on_confirm: F) -> impl IntoView
+    where
+        F: Fn(MouseEvent) + 'static,
+    {
+        let is_active_write = self.is_active_write;
+        let is_active_read = self.is_active_read;
+        view! {
+            cx,
+            <Modal
+                is_active_write
+                is_active_read
+                on_confirm
+            />
+        }
+    }
+
+    pub fn show(&self) {
+        self.is_active_write.set(true);
+    }
+
+    pub fn on_show(&self) -> impl Fn(MouseEvent) {
+        let is_active_write = self.is_active_write;
+        move |_| is_active_write.set(true)
     }
 }
 
 #[component]
-pub fn Modal<F, S>(
+pub fn Modal<F>(
     cx: Scope,
     is_active_write: WriteSignal<bool>,
     is_active_read: ReadSignal<bool>,
     on_confirm: F,
-    on_show: S,
 ) -> impl IntoView
 where
     F: Fn(MouseEvent) + 'static,
-    S: Fn() + 'static,
 {
     let is_active_s = move || {
         if is_active_read() {

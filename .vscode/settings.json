@@ -1,7 +1,8 @@
 {
-    // "rust-analyzer.cargo.features": [
-    //     "ssr"
-    // ],
+    "rust-analyzer.cargo.features": [
+        "ssr",
+        "hydrate"
+    ],
     "workbench.colorCustomizations": {
         "[Monokai Pro (Filter Spectrum)]": {
             "editorInlayHint.foreground": "#759394a2",
