@@ -17,18 +17,23 @@ impl Confirmation {
         }
     }
 
-    pub fn component<F>(&self, cx: Scope, on_confirm: F) -> impl IntoView
+    pub fn component<F>(&self, cx: Scope, message: &str, on_confirm: F) -> impl IntoView
     where
         F: Fn(MouseEvent) + 'static,
     {
         let is_active_write = self.is_active_write;
         let is_active_read = self.is_active_read;
+        let title = "Confirmation";
+        let confirmation = true;
         view! {
             cx,
             <Modal
+                title
+                message
                 is_active_write
                 is_active_read
                 on_confirm
+                confirmation
             />
         }
     }
@@ -49,9 +54,12 @@ impl Confirmation {
 #[component]
 pub fn Modal<F>(
     cx: Scope,
+    #[prop(into)] title: String,
+    #[prop(into)] message: String,
     is_active_write: WriteSignal<bool>,
     is_active_read: ReadSignal<bool>,
     on_confirm: F,
+    confirmation: bool,
 ) -> impl IntoView
 where
     F: Fn(MouseEvent) + 'static,
@@ -65,11 +73,7 @@ where
         }
     };
 
-    let title = "Confirmation";
-
-    let cancel_title = "Cancel";
-
-    let message = "Confirm operation?";
+    let cancel_title = if confirmation { "Cancel" } else { "Ok" };
 
     let on_click_cancel = move |_| is_active_write.set(false);
 
@@ -78,11 +82,15 @@ where
         on_confirm(event);
     };
 
-    let confirm_button = view! {
-        cx,
-        <button class="button" on:click=on_click_ok>
-            "Ok"
-        </button>
+    let confirm_button = if confirmation {
+        Some(view! {
+            cx,
+            <button class="button" on:click=on_click_ok>
+                "Ok"
+            </button>
+        })
+    } else {
+        None
     };
 
     view! {
@@ -105,7 +113,7 @@ where
                         {cancel_title}
                     </button>
                     // Confirm button
-                    { confirm_button }
+                    {confirm_button}
                 </footer>
             </div>
         </div>

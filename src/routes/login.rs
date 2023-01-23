@@ -42,12 +42,12 @@ pub fn Login(cx: Scope) -> impl IntoView {
 
     let (read_signal, write_signal) = model.signal();
 
-    let clear = move |_| write_signal.set(EmailPassword::default().into());
+    let on_clear = move |_| write_signal.set(EmailPassword::default().into());
 
     let confirmation = Confirmation::new(cx);
     let on_show = confirmation.on_show();
 
-    let confirm_clear = confirmation.component(cx, clear);
+    let confirm_clear = confirmation.component(cx, "Confirm clear?", clear);
     view! {
         cx,
             {confirm_clear}
