@@ -47,7 +47,7 @@ pub fn Login(cx: Scope) -> impl IntoView {
     let confirmation = Confirmation::new(cx);
     let on_show = confirmation.on_show();
 
-    let confirm_clear = confirmation.component(cx, "Confirm clear?", clear);
+    let confirm_clear = confirmation.component(cx, "Confirm clear?", on_clear);
     view! {
         cx,
             {confirm_clear}
