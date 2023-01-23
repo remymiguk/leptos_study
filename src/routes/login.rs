@@ -50,6 +50,7 @@ pub fn Login(cx: Scope) -> impl IntoView {
     let confirm_clear = confirmation.component(cx, clear);
     view! {
         cx,
+            {confirm_clear}
             <div>{move ||format!("Object content: {:?}", read_signal())}</div>
             <InputBind fo=&fo input_type="text" literal="E-mail" field_name="email" placeholder="User e-mail"/>
             <InputBind fo=&fo input_type="password" literal="Password" field_name="password" placeholder="User password"/>

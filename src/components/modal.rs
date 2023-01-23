@@ -1,5 +1,6 @@
 use leptos::*;
 use leptos_router::*;
+use log::info;
 use web_sys::MouseEvent;
 
 pub struct Confirmation {
@@ -38,7 +39,10 @@ impl Confirmation {
 
     pub fn on_show(&self) -> impl Fn(MouseEvent) {
         let is_active_write = self.is_active_write;
-        move |_| is_active_write.set(true)
+        move |_| {
+            info!("*** inside on_show set true");
+            is_active_write.set(true)
+        }
     }
 }
 
@@ -54,9 +58,10 @@ where
 {
     let is_active_s = move || {
         if is_active_read() {
-            "is-active"
+            info!("*** modal is-active");
+            "modal is-active"
         } else {
-            ""
+            "modal"
         }
     };
 
@@ -82,7 +87,7 @@ where
 
     view! {
         cx,
-        <div prop:class="modal "{is_active_sx}>
+        <div class=is_active_s>
             <div class="modal-background"></div>
             <div class="modal-card">
                 <header class="modal-card-head">
