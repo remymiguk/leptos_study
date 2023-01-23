@@ -22,6 +22,8 @@ pub trait Repository: std::fmt::Debug {
         offset: Offset,
     ) -> Result<Vec<Self::Entity>, AppError>;
 
+    async fn count(&self) -> Result<usize, AppError>;
+
     async fn create(&self, cx: Scope, entity: Self::Entity) -> Result<Self::Entity, AppError>;
 
     async fn update(&self, cx: Scope, entity: Self::Entity) -> Result<Self::Entity, AppError>;

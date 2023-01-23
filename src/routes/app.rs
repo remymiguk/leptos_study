@@ -34,9 +34,9 @@ pub fn App(cx: Scope) -> impl IntoView {
                     </section>
                 </header>
 
-                <div class="columns is-mobile">
+                <div class="columns">
                     // is-half
-                    <div class="column is-offset-one-quarter">
+                    <div class="column is-full mx-4">
                         <Router>
                             <Nav />
                             <main>

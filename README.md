@@ -1,3 +1,15 @@
+# TODO
+
+- [ ] The mutable operation Insert/update/delete each should be action
+      in the dispatch should pass the record payload
+
+- [ ] The read operation (list and count) should use create_resources using version of actions
+
+- [ ] Question:
+      How get the result, if it works successfully ???
+      Maybe I should have a signal
+      Appears that should read the signal from value(), but should certify what is returns in the first moment
+
 # Leptos study project Axum
 
 It showcases Leptos' ability to create both a client-side rendered app, and a server side rendered app with hydration, in a single repository.

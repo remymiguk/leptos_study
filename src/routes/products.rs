@@ -24,6 +24,21 @@ pub fn Products(cx: Scope) -> impl IntoView {
         })
     };
 
+    let count = create_resource(
+        cx,
+        || {},
+        move |_| async move {
+            product_repository()
+                .count()
+                .await
+                .map_err(|e| error!("{e}"))
+                .ok()
+        },
+    );
+
+    let upsert = create_action(cx, move |payload: &String| async {});
+    let ret = upsert.dispatch(String::from("data"));
+
     let products = create_resource(
         cx,
         move || (offset(), limit()),
@@ -35,6 +50,11 @@ pub fn Products(cx: Scope) -> impl IntoView {
                 .ok()
         },
     );
+
+    // Calc max page
+    let max_page =
+        (request.count.unwrap_or_default() as f32 / limit_offset.limit as f32).ceil() as u32;
+    let current_page = limit_offset.page() as u32;
 
     view! {
         cx,

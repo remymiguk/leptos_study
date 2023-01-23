@@ -25,7 +25,7 @@ pub fn Nav(cx: Scope) -> impl IntoView {
 
     view! { cx,
         <nav class="navbar is-primary" role="navigation" aria-label="main navigation">
-            <div class="navbar-menu">
+            <div class="navbar-brand">
                 <div class="navbar-start">
 
 

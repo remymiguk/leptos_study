@@ -44,10 +44,7 @@ impl Confirmation {
 
     pub fn on_show(&self) -> impl Fn(MouseEvent) {
         let is_active_write = self.is_active_write;
-        move |_| {
-            info!("*** inside on_show set true");
-            is_active_write.set(true)
-        }
+        move |_| is_active_write.set(true)
     }
 }
 
@@ -66,18 +63,17 @@ where
 {
     let is_active_s = move || {
         if is_active_read() {
-            info!("*** modal is-active");
             "modal is-active"
         } else {
             "modal"
         }
     };
 
-    let cancel_title = if confirmation { "Cancel" } else { "Ok" };
+    let cancel_ok = if confirmation { "Cancel" } else { "Ok" };
 
-    let on_click_cancel = move |_| is_active_write.set(false);
+    let on_click_close = move |_| is_active_write.set(false);
 
-    let on_click_ok = move |event| {
+    let on_click_confirm = move |event| {
         is_active_write.set(false);
         on_confirm(event);
     };
@@ -85,7 +81,7 @@ where
     let confirm_button = if confirmation {
         Some(view! {
             cx,
-            <button class="button" on:click=on_click_ok>
+            <button class="button" on:click=on_click_confirm>
                 "Ok"
             </button>
         })
@@ -101,16 +97,16 @@ where
                 <header class="modal-card-head">
                 <p class="modal-card-title">{title}</p>
                 <button class="delete" aria-label="close"
-                    on:click=on_click_cancel>
+                    on:click=on_click_close>
                 </button>
                 </header>
                 <section class="modal-card-body">
                     {message}
                 </section>
                 <footer class="modal-card-foot">
-                    // Cancel button
-                    <button class="button" on:click=on_click_cancel>
-                        {cancel_title}
+                    // Cancel/Ok button
+                    <button class="button" on:click=on_click_close>
+                        {cancel_ok}
                     </button>
                     // Confirm button
                     {confirm_button}

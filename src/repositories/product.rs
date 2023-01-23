@@ -59,6 +59,10 @@ impl Repository for ApiProductRepository {
         Ok(list)
     }
 
+    async fn count(&self) -> Result<usize, AppError> {
+        todo!()
+    }
+
     async fn create(&self, _cx: Scope, _entity: Self::Entity) -> Result<Self::Entity, AppError> {
         todo!()
     }
@@ -119,6 +123,10 @@ impl Repository for MockProductRepository {
         Ok(list)
     }
 
+    async fn count(&self) -> Result<usize, AppError> {
+        Ok(self.products.len())
+    }
+
     async fn create(&self, _cx: Scope, _entity: Self::Entity) -> Result<Self::Entity, AppError> {
         todo!()
     }
@@ -142,6 +150,13 @@ static PRODUCTS_BUFFER: &str = r#"
         "created_at": "2023-01-02T00:02:14.129178"
     },
     {
+        "id": "f92a6aa9-8fde-4e1b-9fc2-d336e8a7f9ca",
+        "description": "Smart TV LED 47\" LG 47LQ620BPSB",
+        "category": "38b9bce7-42cd-49cd-b8de-024eb4380c07",
+        "price": "330.9900",
+        "created_at": "2023-01-02T00:02:14.129178"
+    },
+    {
         "id": "2f2b62a9-1fb8-48ae-8bfb-0e12740500f6",
         "description": "Smart TV LED 4K UHD 50\" Samsung UN50AU7700GXZD",
         "category": "38b9bce7-42cd-49cd-b8de-024eb4380c07",
@@ -153,6 +168,13 @@ static PRODUCTS_BUFFER: &str = r#"
         "description": "Smart TV Android LED Full HD 43\" Philips 43PFG6917/78",
         "category": "38b9bce7-42cd-49cd-b8de-024eb4380c07",
         "price": "650",
+        "created_at": "2023-01-02T00:02:14.129178"
+    },
+    {
+        "id": "2f2b62a9-1fb8-48ae-8bfb-f60e12740500",
+        "description": "Smart TV LED 4K UHD 47\" Samsung UN47AU7700GXZD",
+        "category": "38b9bce7-42cd-49cd-b8de-024eb4380c07",
+        "price": "550",
         "created_at": "2023-01-02T00:02:14.129178"
     }
 ]
@@ -198,6 +220,10 @@ impl Repository for BufferProductRepository {
             .cloned()
             .collect::<Vec<_>>();
         Ok(list)
+    }
+
+    async fn count(&self) -> Result<usize, AppError> {
+        Ok(self.products.len())
     }
 
     async fn create(&self, _cx: Scope, _entity: Self::Entity) -> Result<Self::Entity, AppError> {
