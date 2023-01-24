@@ -33,6 +33,10 @@ pub fn Nav(cx: Scope) -> impl IntoView {
                         <strong>"Home"</strong>
                     </A>
 
+                    <A href="/playground" class="navbar-item".to_string()>
+                        <strong>"Playground"</strong>
+                    </A>
+
                     {logged_menus}
 
                 </div>

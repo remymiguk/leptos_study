@@ -1,5 +1,7 @@
 # TODO
 
+- [ ] Create action playground
+
 - [ ] The mutable operation Insert/update/delete each should be action
       in the dispatch should pass the record payload
 
@@ -9,6 +11,8 @@
       How get the result, if it works successfully ???
       Maybe I should have a signal
       Appears that should read the signal from value(), but should certify what is returns in the first moment
+
+- [ ] Maybe to create a Table/Grid model, to manage pagination, count, crud, etc.
 
 # Leptos study project Axum
 
