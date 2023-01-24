@@ -116,9 +116,17 @@ where
     let next_disabled = current == max;
     let previous_disabled = current == 1;
 
-    let on_click_previous = move |_| on_page_click(current - 1);
+    let on_click_previous = move |_| {
+        if !previous_disabled {
+            on_page_click(current - 1)
+        }
+    };
 
-    let on_click_next = move |_| on_page_click(current + 1);
+    let on_click_next = move |_| {
+        if !next_disabled {
+            on_page_click(current + 1)
+        }
+    };
 
     view! {
         cx,

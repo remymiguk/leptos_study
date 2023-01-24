@@ -10,6 +10,7 @@ use crate::{
 use async_trait::async_trait;
 use core::fmt::Debug;
 use leptos::Scope;
+use log::info;
 use std::{fs, path::PathBuf};
 use uuid::Uuid;
 
@@ -113,10 +114,11 @@ impl Repository for MockProductRepository {
         limit: Limit,
         offset: Offset,
     ) -> Result<Vec<Self::Entity>, AppError> {
+        info!("*** repository offset {} limit {}", offset.0, limit.0);
         let list = self
             .products
             .iter()
-            .skip(offset.0)
+            .skip(offset.0 * limit.0)
             .take(limit.0)
             .cloned()
             .collect::<Vec<_>>();
@@ -212,10 +214,11 @@ impl Repository for BufferProductRepository {
         limit: Limit,
         offset: Offset,
     ) -> Result<Vec<Self::Entity>, AppError> {
+        info!("*** repository offset {} limit {}", offset.0, limit.0);
         let list = self
             .products
             .iter()
-            .skip(offset.0)
+            .skip(offset.0 * limit.0)
             .take(limit.0)
             .cloned()
             .collect::<Vec<_>>();
