@@ -46,7 +46,6 @@ pub fn validators_by_field(
 #[derive(Clone)]
 pub struct FormObject<T: Object> {
     object_read_signal: Memo<(JsonMap<T>, ComponentMap)>,
-    _phantom_data: PhantomData<T>,
     object_writer_signal: WriteSignal<T>,
 }
 
@@ -58,7 +57,6 @@ impl<T: Object> FormObject<T> {
         Self {
             object_read_signal,
             object_writer_signal,
-            _phantom_data: Default::default(),
         }
     }
 

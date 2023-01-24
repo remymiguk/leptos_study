@@ -21,16 +21,30 @@ pub fn App(cx: Scope) -> impl IntoView {
                 <Link rel="shortcut icon" type_="image/ico" href="/favicon.ico"/>
                 <Stylesheet id="leptos" href="./pkg/leptos_study.css"/>
                 <Meta name="description" content="Leptos study app"/>
+                <Style media="screen">
+                "
+
+                  .footer {
+                    height: 50px;
+                  }
+                  .container-scroll {
+                    max-height: 50%;
+                    overflow: auto;
+                    overflow-x: hidden;
+                    overflow-y: auto;
+                  }
+                  "
+                </Style>
 
                 // <Link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
     //           <Script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/js/all.min.js" />
 
                 <header class="header">
                     <section class="hero is-primary">
-                        <div class="hero-body">
-                            <p class="title">{"Rust"}</p>
-                            <p class="subtitle">{"Leptos study app"}</p>
-                        </div>
+                    <div class="hero-body">
+                        <p class="title">{"Rust"}</p>
+                        <p class="subtitle">{"Leptos study app"}</p>
+                    </div>
                     </section>
                 </header>
 
@@ -40,15 +54,15 @@ pub fn App(cx: Scope) -> impl IntoView {
                         <Router>
                             <Nav />
                             <main>
-                               <AppRoutes/>
+                            <AppRoutes/>
                             </main>
                         </Router>
                     </div>
                 </div>
 
                 <footer class="footer">
-                    <div class="content has-text-right">
-                        <p><strong>{"Leptos"}</strong> {" powered by Rust"}</p>
+                     <div class="content has-text-right">
+                     <p><strong>{"Leptos"}</strong> {" powered by Rust"}</p>
                     </div>
                 </footer>
         }

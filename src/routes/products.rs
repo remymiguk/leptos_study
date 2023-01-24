@@ -67,10 +67,7 @@ pub fn Products(cx: Scope) -> impl IntoView {
         _ => 0,
     };
 
-    let on_page_click = move |page: usize| {
-        info!("*** inside page_write");
-        page_write.set(page);
-    };
+    let on_page_click = move |page: usize| page_write.set(page);
 
     view! {
         cx,
@@ -86,7 +83,6 @@ pub fn Products(cx: Scope) -> impl IntoView {
                 (_ ,_) => Some(view! { cx,  <p>{"Error loading products"}</p> }.into_view(cx)),
             }}
         </Suspense>
-
     }
 }
 
