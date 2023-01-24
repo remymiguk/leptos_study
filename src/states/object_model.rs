@@ -174,7 +174,7 @@ impl<T: Object> ObjectModel<T> {
         // From the changed fields execute validators
         let diff_validated_reader = {
             let validators = validators.clone();
-            create_resource(cx, diff_json_reader, move |json_changed| {
+            create_local_resource(cx, diff_json_reader, move |json_changed| {
                 exec_validators(validators.clone(), json_changed)
             })
         };

@@ -7,7 +7,7 @@ use uuid::Uuid;
 #[component]
 pub fn ProductForm(cx: Scope) -> impl IntoView {
     let params = use_params_map(cx);
-    let product = create_resource(
+    let product = create_local_resource(
         cx,
         move || params().get("id").cloned().unwrap_or_default(),
         move |id| async move {

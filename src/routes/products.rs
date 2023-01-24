@@ -3,29 +3,43 @@ use crate::app::repository::product_repository;
 use crate::models::product::Product;
 use leptos::*;
 use leptos_router::*;
+use log::info;
 use web_sys::MouseEvent;
 
 #[component]
 pub fn Products(cx: Scope) -> impl IntoView {
-    let query = use_query_map(cx);
+    let (page_read, page_write) = create_signal(cx, 1);
 
-    let offset = move || {
-        query.with(|q| {
-            q.get("offset")
-                .and_then(|offset| offset.parse::<usize>().ok())
-                .unwrap_or(0)
-        })
-    };
+    let offset_read = move || page_read() - 1;
 
-    let limit = move || {
-        query.with(|q| {
-            q.get("limit")
-                .and_then(|limit| limit.parse::<usize>().ok())
-                .unwrap_or(10)
-        })
-    };
+    let (limit_read, limit_write) = create_signal(cx, 3);
 
-    let count = create_resource(
+    // let query = use_query_map(cx);
+
+    // let offset = move || {
+    //     query.with(|q| {
+    //         let offset = q
+    //             .get("offset")
+    //             .and_then(|offset| offset.parse::<usize>().ok())
+    //             .unwrap_or(0);
+    //         info!("offset: {offset}");
+    //         offset
+    //     })
+    // };
+
+    // let query = use_query_map(cx);
+    // let limit = move || {
+    //     query.with(|q| {
+    //         let limit = q
+    //             .get("limit")
+    //             .and_then(|limit| limit.parse::<usize>().ok())
+    //             .unwrap_or(10);
+    //         info!("limit: {limit}");
+    //         limit
+    //     })
+    // };
+
+    let count = create_local_resource(
         cx,
         || {},
         move |_| async move {
@@ -36,12 +50,9 @@ pub fn Products(cx: Scope) -> impl IntoView {
         },
     );
 
-    // let upsert = create_action(cx, move |payload: &String| async {});
-    // let ret = upsert.dispatch(String::from("data"));
-
-    let products = create_resource(
+    let products = create_local_resource(
         cx,
-        move || (offset(), limit()),
+        move || (offset_read(), limit_read()),
         move |(offset, limit)| async move {
             product_repository()
                 .list(cx, Limit(limit), Offset(offset))
@@ -51,21 +62,15 @@ pub fn Products(cx: Scope) -> impl IntoView {
     );
 
     // Calc max page
-    let max_page = || match count.read() {
-        Some(Ok(count)) => Some((count as f32 / limit() as f32).ceil() as usize),
-        _ => None,
+    let max_page = move || match count.read() {
+        Some(Ok(count)) => (count as f32 / limit_read() as f32).ceil() as usize,
+        _ => 0,
     };
 
-    // Current page max page
-    let current_page = move || {
-        if limit() == 0 {
-            1
-        } else {
-            (offset() / limit()) + 1
-        }
+    let on_page_click = move |page: usize| {
+        info!("*** inside page_write");
+        page_write.set(page);
     };
-    // let max_page = (request.count.unwrap_or_default() as f32 / limit_offset.limit as f32).ceil() as u32;
-    // let current_page = limit_offset.page() as u32;
 
     view! {
         cx,
@@ -73,7 +78,11 @@ pub fn Products(cx: Scope) -> impl IntoView {
             {move || match (products.read(), count.read()) {
                 (None, None) => None,
                 (Some(Ok(products)), Some(Ok(count))) =>
-                    Some(view! { cx, <LoadedProducts products count /> }.into_view(cx)),
+                    Some(view! {
+                        cx,
+                        <LoadedProducts products count />
+                        <Pagination max=max_page() current=page_read() on_page_click />
+                    }.into_view(cx)),
                 (_ ,_) => Some(view! { cx,  <p>{"Error loading products"}</p> }.into_view(cx)),
             }}
         </Suspense>

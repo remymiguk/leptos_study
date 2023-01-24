@@ -16,8 +16,8 @@ pub fn AppRoutes(cx: Scope) -> impl IntoView {
             <Route path="login" view=|cx| view! { cx,  <Login/> }/>
             <Route path="playground" view=|cx| view! { cx,  <Playground/> }/>
             <Route path="settings" view=|cx| view! { cx,  <Settings/> }/>
-            <Route path="products" view=|cx| view! { cx,  <Products/> }/>
             <Route path="product/:id" view=|cx| view! { cx,  <ProductForm/> }/>
+            <Route path="products" view=|cx| view! { cx,  <Products/> }/>
         </Routes>
     }
 }
