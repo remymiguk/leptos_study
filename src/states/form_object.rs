@@ -9,7 +9,6 @@ use crate::states::object::Object;
 use leptos::*;
 use log::info;
 use serde::{Deserialize, Serialize};
-use std::marker::PhantomData;
 use voxi_core::{objects::value_json::json_to_str, ValueType};
 use web_sys::Event;
 

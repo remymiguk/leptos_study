@@ -1,4 +1,7 @@
-use crate::{app::repository::product_repository, models::product::Product};
+use crate::{
+    models::product::{Product, ProductModel},
+    states::app_state::StateGetter,
+};
 use leptos::*;
 use leptos_meta::*;
 use leptos_router::use_params_map;
@@ -14,7 +17,9 @@ pub fn ProductForm(cx: Scope) -> impl IntoView {
             if id.is_empty() {
                 None
             } else {
-                product_repository()
+                let model = use_context::<StateGetter<ProductModel>>(cx).unwrap().0();
+                model
+                    .clone()
                     .read(cx, id.parse::<Uuid>().unwrap())
                     .await
                     .map_err(|e| error!("{e}"))
@@ -28,7 +33,7 @@ pub fn ProductForm(cx: Scope) -> impl IntoView {
         product
             .read()
             .and_then(|product| product.map(|product| product.description))
-            .unwrap_or_else(|| "Loading story...".to_string())
+            .unwrap_or_else(|| "Loading product...".to_string())
     };
 
     view! {

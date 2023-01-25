@@ -1,6 +1,4 @@
 use leptos::*;
-use leptos_router::*;
-use log::info;
 use web_sys::MouseEvent;
 
 pub struct Confirmation {
