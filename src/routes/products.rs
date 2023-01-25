@@ -1,7 +1,7 @@
 use crate::app::pagination::*;
 use crate::app::repository::product_repository;
 use crate::components::pagination::*;
-use crate::models::product::{Product, ProductModel};
+use crate::models::product::Product;
 use leptos::*;
 use leptos_router::*;
 

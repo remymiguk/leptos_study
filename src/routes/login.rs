@@ -38,22 +38,21 @@ pub fn Login(cx: Scope) -> impl IntoView {
 
     let model = ObjectModel::new(cx, EmailPassword::default(), validators);
 
-    let fo = FormObject::new(model.clone());
-
     let (read_signal, write_signal) = model.signal();
 
-    let on_clear = move |_| write_signal.set(EmailPassword::default().into());
+    let fo = FormObject::new(model);
 
-    let confirmation = Confirmation::new(cx);
-    let on_show = confirmation.on_show();
+    let confirm_clear = Confirmation::new(cx);
 
-    let confirm_clear = confirmation.component(cx, "Confirm clear?", on_clear);
     view! {
         cx,
-            {confirm_clear}
+            {confirm_clear.component(cx, "Confirm clear?", move |_| write_signal.set(EmailPassword::default()))}
+
             <div>{move ||format!("Object content: {:?}", read_signal())}</div>
+
             <InputBind fo=&fo input_type="text" literal="E-mail" field_name="email" placeholder="User e-mail"/>
             <InputBind fo=&fo input_type="password" literal="Password" field_name="password" placeholder="User password"/>
+
             <br/><br/>
             <input type="button" value="Login" class="button is-danger"
                 on:click=move |_| {
@@ -63,7 +62,7 @@ pub fn Login(cx: Scope) -> impl IntoView {
             />
             <br/><br/>
             <input type="button" value="Clear" class="button is-danger"
-                on:click=on_show
+                on:click=confirm_clear.on_show()
             />
 
     }

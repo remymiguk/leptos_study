@@ -1,6 +1,6 @@
 use crate::{
     models::product::{Product, ProductModel},
-    states::app_state::StateGetter,
+    states::{app_state::StateGetter, form_object::*, object_model::ObjectModel},
 };
 use leptos::*;
 use leptos_meta::*;
@@ -10,6 +10,7 @@ use uuid::Uuid;
 #[component]
 pub fn ProductForm(cx: Scope) -> impl IntoView {
     let params = use_params_map(cx);
+
     let product = create_local_resource(
         cx,
         move || params().get("id").cloned().unwrap_or_default(),
@@ -56,14 +57,20 @@ pub fn LoadedProductForm(cx: Scope, product: Product) -> impl IntoView {
         navigator.back().unwrap();
     };
 
+    let model = ObjectModel::new(cx, product, vec![]);
+
+    let fo = FormObject::new(model);
+
     view! { cx,
         <div>
             <div>{ "id" }</div>
-            <input class="input is-primary" type="text" placeholder="Primary input" value={product.id.to_string()}/>
-            <div>{ "Description" }</div>
-            <input class="input is-primary" type="text" placeholder="Primary input" value={product.description}/>
-            <div>{ "Price" }</div>
-            <input class="input is-primary" type="text" placeholder="Primary input" value={product.price.to_string()}/>
+
+            <InputBind fo=&fo input_type="text" literal="Id" field_name="id" placeholder="Id"/>
+
+            <InputBind fo=&fo input_type="text" literal="Description" field_name="description" placeholder="Description"/>
+
+            <InputBind fo=&fo input_type="text" literal="Price" field_name="price" placeholder="Price"/>
+
             <br/>
             <br/>
             <input
