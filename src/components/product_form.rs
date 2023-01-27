@@ -1,4 +1,7 @@
-use crate::{app::repository::product_repository, models::product::Product};
+use crate::{
+    models::product::{Product, ProductModel},
+    states::{app_state::StateGetter, form_object::*, object_model::ObjectModel},
+};
 use leptos::*;
 use leptos_meta::*;
 use leptos_router::use_params_map;
@@ -7,14 +10,17 @@ use uuid::Uuid;
 #[component]
 pub fn ProductForm(cx: Scope) -> impl IntoView {
     let params = use_params_map(cx);
-    let product = create_resource(
+
+    let product = create_local_resource(
         cx,
         move || params().get("id").cloned().unwrap_or_default(),
         move |id| async move {
             if id.is_empty() {
                 None
             } else {
-                product_repository()
+                let model = use_context::<StateGetter<ProductModel>>(cx).unwrap().0();
+                model
+                    .clone()
                     .read(cx, id.parse::<Uuid>().unwrap())
                     .await
                     .map_err(|e| error!("{e}"))
@@ -28,7 +34,7 @@ pub fn ProductForm(cx: Scope) -> impl IntoView {
         product
             .read()
             .and_then(|product| product.map(|product| product.description))
-            .unwrap_or_else(|| "Loading story...".to_string())
+            .unwrap_or_else(|| "Loading product...".to_string())
     };
 
     view! {
@@ -51,14 +57,20 @@ pub fn LoadedProductForm(cx: Scope, product: Product) -> impl IntoView {
         navigator.back().unwrap();
     };
 
+    let model = ObjectModel::new(cx, product, vec![]);
+
+    let fo = FormObject::new(model);
+
     view! { cx,
         <div>
             <div>{ "id" }</div>
-            <input class="input is-primary" type="text" placeholder="Primary input" value={product.id.to_string()}/>
-            <div>{ "Description" }</div>
-            <input class="input is-primary" type="text" placeholder="Primary input" value={product.description}/>
-            <div>{ "Price" }</div>
-            <input class="input is-primary" type="text" placeholder="Primary input" value={product.price.to_string()}/>
+
+            <InputBind fo=&fo input_type="text" literal="Id" field_name="id" placeholder="Id"/>
+
+            <InputBind fo=&fo input_type="text" literal="Description" field_name="description" placeholder="Description"/>
+
+            <InputBind fo=&fo input_type="text" literal="Price" field_name="price" placeholder="Price"/>
+
             <br/>
             <br/>
             <input

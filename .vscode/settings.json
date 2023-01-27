@@ -1,7 +1,9 @@
 {
     // "rust-analyzer.cargo.features": [
-    //     "ssr"
+    // "ssr",
+    // "hydrate"
     // ],
+    "rust-analyzer.check.targets": "wasm32-unknown-unknown",
     "workbench.colorCustomizations": {
         "[Monokai Pro (Filter Spectrum)]": {
             "editorInlayHint.foreground": "#759394a2",
