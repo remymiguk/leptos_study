@@ -96,60 +96,59 @@ impl<T: Object> ObjectModel<T> {
     pub fn new(cx: Scope, object: T, validators: impl Into<Validators>) -> Self {
         let validators: Validators = validators.into();
         let validators = validators.into_vec();
-
-        //
-        //
-        //
-
         // 1) Create signals to global T object
         let (public_to_validate, public_object_writer) = create_signal(cx, object.clone());
 
-        // 2) Create signals per field
-        let mut fields_reader = HashMap::new();
-        for field_name in fields_names_from_object(&object.clone()) {
-            let field_reader = {
-                let field_name = field_name.clone();
-                create_memo(cx, move |_| {
-                    let object = public_to_validate();
-                    value_from_object(&object, &field_name)
-                })
-            };
-            fields_reader.insert(field_name.clone(), field_reader);
-        }
+        //
+        //
+        //
 
-        // 3) Create signal per field + validators
-        //      for each validator should read input fields
-        let mut validators_reader = HashMap::new();
-        for validator in validators.iter() {
-            let mut previous_validator_result = None;
-            let trigger_reader = fields_reader
-                .get(validator.trigger_field_name().name.name())
-                .unwrap()
-                .clone();
+        // // 2) Create signals per field
+        // let mut fields_reader = HashMap::new();
+        // for field_name in fields_names_from_object(&object.clone()) {
+        //     let field_reader = {
+        //         let field_name = field_name.clone();
+        //         create_memo(cx, move |_| {
+        //             let object = public_to_validate();
+        //             value_from_object(&object, &field_name)
+        //         })
+        //     };
+        //     fields_reader.insert(field_name.clone(), field_reader);
+        // }
 
-            let input_readers = validator
-                .all_input_fields()
-                .iter()
-                .map(|fnt| {
-                    (
-                        fnt.name.name().to_string(),
-                        fields_reader.get(fnt.name.name()).unwrap().clone(),
-                    )
-                })
-                .collect::<HashMap<_, _>>();
+        // // 3) Create signal per field + validators
+        // //      for each validator should read input fields
+        // let mut validators_reader = HashMap::new();
+        // for validator in validators.iter() {
+        //     let mut previous_validator_result = None;
+        //     let trigger_reader = fields_reader
+        //         .get(validator.trigger_field_name().name.name())
+        //         .unwrap()
+        //         .clone();
 
-            // TODO:
-            // to consider the "input_json":
-            // (Option<PreviousValidatorResult>, input_readers)
+        //     let input_readers = validator
+        //         .all_input_fields()
+        //         .iter()
+        //         .map(|fnt| {
+        //             (
+        //                 fnt.name.name().to_string(),
+        //                 fields_reader.get(fnt.name.name()).unwrap().clone(),
+        //             )
+        //         })
+        //         .collect::<HashMap<_, _>>();
 
-            let validator_reader = create_resource(
-                cx,
-                || trigger_reader,
-                move |json_changed| exec_validators_map(validators.clone(), json_changed),
-            );
-            previous_validator_result = Some(validator_reader.clone());
-            validators_reader.insert(validator, previous_validator_result);
-        }
+        //     // TODO:
+        //     // to consider the "input_json":
+        //     // (Option<PreviousValidatorResult>, input_readers)
+
+        //     let validator_reader = create_resource(
+        //         cx,
+        //         || trigger_reader,
+        //         move |json_changed| exec_validators_map(validators.clone(), json_changed),
+        //     );
+        //     previous_validator_result = Some(validator_reader.clone());
+        //     validators_reader.insert(validator, previous_validator_result);
+        // }
 
         //
         //
@@ -257,22 +256,22 @@ fn object_to_map_comp<T: Serialize>(object: &T) -> ComponentMap {
     ComponentMap::new(components_data)
 }
 
-fn map_reader_to_json(map_reader: &HashMap<String, Memo<serde_json::Value>>) -> serde_json::Value {
-    let mut j = json!({});
-    let map_j = j.as_object_mut().unwrap();
+fn map_reader_to_json(hash_map: &HashMap<String, Memo<serde_json::Value>>) -> serde_json::Value {
+    let mut object_j = json!({});
+    let map_j = object_j.as_object_mut().unwrap();
     for (field_name, value) in hash_map {
-        map_j.insert(field_name, value());
+        map_j.insert(field_name.clone(), value());
     }
-    j
+    object_j
 }
 
 async fn exec_validators_map(
-    input_value: serde_json::Value,
+    hash_map: &HashMap<String, Memo<serde_json::Value>>,
     validator: Box<dyn ValidatorProvider + 'static + Send + Sync>,
 ) {
-    let j = map_reader_to_json(&hash_map);
-    validator.create_request(object_j, trigger_field_name);
-    let result = validator.validate(&input_value).await.unwrap();
+    let object_j = map_reader_to_json(&hash_map);
+    let request = validator.create_request(&object_j);
+    let result = validator.validate(request).await.unwrap();
     todo!()
 
     // complete with function below
@@ -308,8 +307,7 @@ async fn exec_validators<T: Object>(
         for validator in validators {
             info!("found validator for {field_diff_name:?}!");
             // Create validator request
-            let request =
-                validator.create_request(&json_map.clone().into(), &field_diff_name.clone());
+            let request = validator.create_request(&json_map.clone().into());
             // Execute validation
             // info!("inside create_action");
             let response = exec_validator(validator, request).await.unwrap();

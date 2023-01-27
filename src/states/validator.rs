@@ -23,15 +23,11 @@ pub trait ValidatorProvider: Clone + std::fmt::Debug {
         fields
     }
 
-    fn create_request(
-        &self,
-        object_j: &serde_json::Value,
-        trigger_field_name: &str,
-    ) -> ValidatorRequest {
+    fn create_request(&self, object_j: &serde_json::Value) -> ValidatorRequest {
         let input_values = object_j_to_subset_values(object_j, self.all_input_fields()).unwrap();
         ValidatorRequest {
             input_values,
-            trigger_field_name: trigger_field_name.to_string(),
+            trigger_field_name: self.trigger_field_name().name.to_string(),
         }
     }
 }
