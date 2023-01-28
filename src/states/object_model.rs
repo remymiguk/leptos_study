@@ -78,6 +78,31 @@ impl ComponentMap {
     }
 }
 
+pub struct ObjectModelBuilder<T: Object> {
+    validators: Validators,
+    cx: Scope,
+    object: T,
+}
+
+impl<T: Object> ObjectModelBuilder<T> {
+    pub fn new(cx: Scope, object: T) -> Self {
+        Self {
+            validators: vec![].into(),
+            cx,
+            object,
+        }
+    }
+
+    pub fn with_validators(mut self, validators: impl Into<Validators>) -> Self {
+        self.validators = validators.into();
+        self
+    }
+
+    pub fn build(self) -> ObjectModel<T> {
+        ObjectModel::new(self.cx, self.object, self.validators)
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct ObjectModel<T: Object> {
     pub public_object_writer: WriteSignal<T>,
@@ -176,7 +201,7 @@ impl<T: Object> ObjectModel<T> {
         // From the changed fields execute validators
         let diff_validated_reader = {
             let validators = validators.clone();
-            create_resource(cx, diff_json_reader, move |json_changed| {
+            create_local_resource(cx, diff_json_reader, move |json_changed| {
                 exec_validators(validators.clone(), json_changed)
             })
         };
