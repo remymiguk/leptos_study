@@ -27,18 +27,13 @@ pub fn Nav(cx: Scope) -> impl IntoView {
         <nav class="navbar is-primary" role="navigation" aria-label="main navigation">
             <div class="navbar-brand">
                 <div class="navbar-start">
-
-
                     <A href="/" class="navbar-item".to_string()>
                         <strong>"Home"</strong>
                     </A>
-
                     <A href="/playground" class="navbar-item".to_string()>
                         <strong>"Playground"</strong>
                     </A>
-
                     {logged_menus}
-
                 </div>
             </div>
         </nav>

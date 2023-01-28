@@ -5,27 +5,31 @@ use crate::{
 use leptos::*;
 use leptos_meta::*;
 use leptos_router::use_params_map;
+use log::info;
 use uuid::Uuid;
 
 #[component]
 pub fn ProductForm(cx: Scope) -> impl IntoView {
     let params = use_params_map(cx);
+    let model = use_context::<StateGetter<ProductModel>>(cx).unwrap().0();
 
     let product = create_local_resource(
         cx,
         move || params().get("id").cloned().unwrap_or_default(),
-        move |id| async move {
-            if id.is_empty() {
-                None
-            } else {
-                let model = use_context::<StateGetter<ProductModel>>(cx).unwrap().0();
-                model
-                    .clone()
-                    .read(cx, id.parse::<Uuid>().unwrap())
-                    .await
-                    .map_err(|e| error!("{e}"))
-                    .ok()
-                    .flatten()
+        move |id| {
+            let model = model.clone();
+            async move {
+                if id.is_empty() {
+                    None
+                } else {
+                    model
+                        .clone()
+                        .read(cx, id.parse::<Uuid>().unwrap())
+                        .await
+                        .map_err(|e| error!("{e}"))
+                        .ok()
+                        .flatten()
+                }
             }
         },
     );
@@ -43,7 +47,7 @@ pub fn ProductForm(cx: Scope) -> impl IntoView {
         <Suspense fallback=|| view! { cx, "Loading..." }>
             {move || product.read().map(|product| match product {
                 None => view! { cx,  <div class="item-view">"Error loading this product."</div> }.into_view(cx),
-                Some(product) => view! { cx, <LoadedProductForm product /> }.into_view(cx),
+                Some(product) => view! { cx, <LoadedProductForm product/> }.into_view(cx),
                 })
             }
         </Suspense>
@@ -52,6 +56,8 @@ pub fn ProductForm(cx: Scope) -> impl IntoView {
 
 #[component]
 pub fn LoadedProductForm(cx: Scope, product: Product) -> impl IntoView {
+    info!("***************");
+
     let on_cancel = move |_| {
         let navigator = window().history().unwrap();
         navigator.back().unwrap();
@@ -59,13 +65,13 @@ pub fn LoadedProductForm(cx: Scope, product: Product) -> impl IntoView {
 
     let model = ObjectModel::new(cx, product, vec![]);
 
-    let fo = FormObject::new(model);
+    // let fo = FormObject::new(model);
 
     view! { cx,
         <div>
-            <InputBind fo=&fo input_type="text" literal="Id" field_name="id" placeholder="Id"/>
-            <InputBind fo=&fo input_type="text" literal="Description" field_name="description" placeholder="Description"/>
-            <InputBind fo=&fo input_type="text" literal="Price" field_name="price" placeholder="Price"/>
+            // <InputBind fo=&fo input_type="text" literal="Id" field_name="id" placeholder="Id"/>
+            // <InputBind fo=&fo input_type="text" literal="Description" field_name="description" placeholder="Description"/>
+            // <InputBind fo=&fo input_type="text" literal="Price" field_name="price" placeholder="Price"/>
             <br/>
             <br/>
             <input

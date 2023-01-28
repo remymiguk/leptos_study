@@ -68,6 +68,8 @@ pub fn Products(cx: Scope) -> impl IntoView {
 
     let on_page_click = move |page: usize| page_write.set(page);
 
+    // TODO: use Transition instead of Suspense
+
     view! {
         cx,
         <Suspense fallback=|| view! { cx, "Loading..." }>

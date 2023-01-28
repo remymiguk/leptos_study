@@ -10,10 +10,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::json;
 use std::collections::{BTreeMap, HashMap};
 use voxi_core::{
-    objects::value_json::{
-        fields_names_from_object, get_field_to_str, json_to_map, modified_fields_name,
-        value_from_object,
-    },
+    objects::value_json::{get_field_to_str, modified_fields_name},
     ValueType,
 };
 
@@ -240,7 +237,10 @@ impl<T: Object> ObjectModel<T> {
             let public_component_reader = public_component_reader();
             let component_map = match public_component_reader {
                 Some(component_reader) => component_reader.1.into_map(),
-                None => return previous_object,
+                None => {
+                    info!("4) transform to object: `{previous_object:?}`");
+                    return previous_object;
+                }
             };
 
             for (filed_name, component_data) in component_map {
