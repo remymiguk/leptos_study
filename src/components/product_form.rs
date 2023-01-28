@@ -63,7 +63,6 @@ pub fn LoadedProductForm(cx: Scope, product: Product) -> impl IntoView {
 
     view! { cx,
         <div>
-            <div>{ "id" }</div>
 
             <InputBind fo=&fo input_type="text" literal="Id" field_name="id" placeholder="Id"/>
 
