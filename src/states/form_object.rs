@@ -44,7 +44,7 @@ pub fn validators_by_field(
 
 #[derive(Clone)]
 pub struct FormObject<T: Object> {
-    object_read_signal: Memo<(JsonMap<T>, ComponentMap)>,
+    object_read_signal: Memo<Option<(JsonMap<T>, ComponentMap)>>,
     object_writer_signal: WriteSignal<T>,
 }
 
@@ -146,10 +146,19 @@ impl<T: Object> FormObject<T> {
         cx: Scope,
         field_name: String,
         value_type: ValueType,
-    ) -> Memo<(String, JsonMap<T>)> {
+    ) -> Memo<Option<(String, JsonMap<T>)>> {
         let read_signal = self.object_read_signal;
-        create_memo(cx, move |_| {
+        create_memo(cx, move |previous| {
+            let previous = previous
+                .cloned()
+                .flatten()
+                .unwrap_or_else(|| (String::new(), JsonMap::<T>::empty()));
+
             let json_map = read_signal();
+            let json_map = match json_map {
+                Some(json_map) => json_map,
+                None => return None,
+            };
             let user_json = json_map.0;
             let value_j = json_map.1.map().get(&field_name).unwrap().value.clone();
 
@@ -157,7 +166,7 @@ impl<T: Object> FormObject<T> {
             info!(
                 "inside memo content: `{field_name}` value: `{value_s}` user_json: `{user_json:?}`"
             );
-            (value_s, user_json)
+            Some((value_s, user_json))
         })
     }
 
@@ -179,7 +188,7 @@ impl<T: Object> FormObject<T> {
                 .get(&field_name)
                 .unwrap()
                 .valid
-                .unwrap_or_else(|| true)
+                .unwrap_or(true)
         })
     }
 

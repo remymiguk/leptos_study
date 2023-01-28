@@ -1,6 +1,6 @@
 use crate::states::object::Object;
 use serde::{Deserialize, Serialize};
-use serde_json::Map;
+use serde_json::{json, Map};
 use std::marker::PhantomData;
 use voxi_core::{
     objects::value_json::{get_field_to_str, set_field_from_str},
@@ -16,6 +16,13 @@ pub struct JsonMap<T: Object> {
 }
 
 impl<T: Object> JsonMap<T> {
+    pub fn empty() -> JsonMap<T> {
+        Self {
+            object: json! { {} },
+            _phantom: Default::default(),
+        }
+    }
+
     pub fn new(object: impl Serialize) -> Self {
         let object = serde_json::to_value(object).unwrap();
         Self {
