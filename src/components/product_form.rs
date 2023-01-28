@@ -52,7 +52,7 @@ pub fn ProductForm(cx: Scope) -> impl IntoView {
 
 #[component]
 pub fn LoadedProductForm(cx: Scope, product: Product) -> impl IntoView {
-    let on_click = move |_| {
+    let on_cancel = move |_| {
         let navigator = window().history().unwrap();
         navigator.back().unwrap();
     };
@@ -63,19 +63,14 @@ pub fn LoadedProductForm(cx: Scope, product: Product) -> impl IntoView {
 
     view! { cx,
         <div>
-            <div>{ "id" }</div>
-
             <InputBind fo=&fo input_type="text" literal="Id" field_name="id" placeholder="Id"/>
-
             <InputBind fo=&fo input_type="text" literal="Description" field_name="description" placeholder="Description"/>
-
             <InputBind fo=&fo input_type="text" literal="Price" field_name="price" placeholder="Price"/>
-
             <br/>
             <br/>
             <input
                 class="button is-danger"
-                on:click=on_click
+                on:click=on_cancel
                 type="button"
                 value="Cancel"/>
         </div>

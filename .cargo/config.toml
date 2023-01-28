@@ -1,6 +1,6 @@
 [build]
 rustc-wrapper = "/home/vanius/.cargo/bin/sccache"
-target = "wasm32-unknown-unknown"
+# target = "wasm32-unknown-unknown"
 
 [target.x86_64-unknown-linux-gnu]
 linker = "clang"
