@@ -208,7 +208,7 @@ impl<T: Object> ObjectModel<T> {
                     };
 
                     // Update whole previous component map with new states
-                    let mut full_map = previous.1.into_map();
+                    let mut full_map = previous.1.clone().into_map();
                     for (field_name, component_data) in component_map.into_map() {
                         full_map.insert(field_name.clone(), component_data.clone());
                     }

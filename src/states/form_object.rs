@@ -86,7 +86,7 @@ impl<T: Object> FormObject<T> {
         let content_s = move || {
             let content_signal = content_signal();
             info!("content_signal: `{content_signal:?}`");
-            content_signal.0
+            content_signal.map(|cs| cs.0)
         };
 
         let is_valid_signal = self.memo_valid(cx, field_name.clone());
@@ -148,14 +148,8 @@ impl<T: Object> FormObject<T> {
         value_type: ValueType,
     ) -> Memo<Option<(String, JsonMap<T>)>> {
         let read_signal = self.object_read_signal;
-        create_memo(cx, move |previous| {
-            let previous = previous
-                .cloned()
-                .flatten()
-                .unwrap_or_else(|| (String::new(), JsonMap::<T>::empty()));
-
-            let json_map = read_signal();
-            let json_map = match json_map {
+        create_memo(cx, move |_| {
+            let json_map = match read_signal() {
                 Some(json_map) => json_map,
                 None => return None,
             };
@@ -174,7 +168,7 @@ impl<T: Object> FormObject<T> {
         let read_signal = self.object_read_signal;
         create_memo(cx, move |_| {
             let json_map = read_signal();
-            json_map.1.map().get(&field_name).unwrap().hint.clone()
+            json_map.and_then(|jm| jm.1.map().get(&field_name).unwrap().hint.clone())
         })
     }
 
@@ -183,11 +177,7 @@ impl<T: Object> FormObject<T> {
         create_memo(cx, move |_| {
             let json_map = read_signal();
             json_map
-                .1
-                .map()
-                .get(&field_name)
-                .unwrap()
-                .valid
+                .and_then(|jm| jm.1.map().get(&field_name).unwrap().valid)
                 .unwrap_or(true)
         })
     }
@@ -198,7 +188,11 @@ impl<T: Object> FormObject<T> {
 
         move |e: Event| {
             let value_s = event_target_value(&e);
-            let mut form_map = JsonMap::new(read_signal.get().1.object());
+            let component_map = match read_signal.get() {
+                Some((_, component_map)) => component_map,
+                None => return,
+            };
+            let mut form_map = JsonMap::new(component_map.object());
 
             let value_s = if value_s.is_empty() {
                 None
