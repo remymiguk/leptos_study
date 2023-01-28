@@ -5,7 +5,7 @@ async fn main() {
     use axum::{extract::Extension, routing::get};
     use leptos::*;
     use leptos_axum::{generate_route_list, LeptosRoutes};
-    use leptos_study::file::file_handler;
+    use leptos_study::file::file_and_error_handler;
     use leptos_study::routes::app::*;
     use std::sync::Arc;
 
@@ -20,9 +20,9 @@ async fn main() {
 
     // build our application with a route
     let app = Router::new()
-        .route("/favicon.ico", get(file_handler))
+        .route("/favicon.ico", get(file_and_error_handler))
         .leptos_routes(leptos_options.clone(), routes, |cx| view! { cx, <App/> })
-        .fallback(file_handler)
+        .fallback(file_and_error_handler)
         .layer(Extension(Arc::new(leptos_options)));
 
     // run our app with hyper

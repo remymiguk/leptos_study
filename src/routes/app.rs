@@ -24,7 +24,7 @@ pub fn App(cx: Scope) -> impl IntoView {
     view! {
             cx,
             <Link rel="shortcut icon" type_="image/ico" href="/favicon.ico"/>
-            <Stylesheet id="leptos" href="./pkg/leptos_study.css"/>
+            <Stylesheet id="leptos" href="/pkg/leptos_study.css"/>
             <Meta name="description" content="Leptos study app"/>
             <Style media="screen">
             "
