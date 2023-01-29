@@ -35,23 +35,6 @@ pub fn ProductForm(cx: Scope) -> impl IntoView {
         },
     );
 
-    // let t = move || product.read();
-
-    // let child = move || match product.read() {
-    //     Some(product) => match product {
-    //         Some(product) => {
-    //             info!("#3");
-    //             view! { cx, <LoadedProductForm product/> }.into_view(cx)
-    //         }
-    //         None => view! { cx, <div class="item-view">"Error loading this product."</div> }
-    //             .into_view(cx),
-    //     },
-    //     None => {
-    //         info!("#2");
-    //         view! { cx, "Loading..." }.into_view(cx)
-    //     }
-    // };
-
     view! {
         cx,
         <HoldOn
@@ -64,7 +47,7 @@ pub fn ProductForm(cx: Scope) -> impl IntoView {
 }
 
 #[component]
-pub fn HoldOn<T, R, F, E, V, C>(
+pub fn HoldOn<T, V, R, F, E, C>(
     cx: Scope,
     read: R,
     fallback: F,
@@ -78,12 +61,59 @@ where
     C: Fn(T) -> V + 'static,
     V: IntoView,
 {
-    move || match read() {
-        Some(result) => match result {
-            Some(payload) => child(payload).into_view(cx),
-            None => error().into_view(cx),
-        },
-        None => fallback().into_view(cx),
+    move || {
+        log!("doing read");
+        match read() {
+            Some(result) => match result {
+                Some(payload) => {
+                    log!("child");
+                    child(payload).into_view(cx)
+                }
+                None => {
+                    log!("error");
+                    error().into_view(cx)
+                }
+            },
+            None => {
+                log!("fallback");
+                fallback().into_view(cx)
+            }
+        }
+    }
+}
+
+pub fn hold_on<T, V, R, F, E, C>(
+    cx: Scope,
+    read: R,
+    fallback: F,
+    error: E,
+    child: C,
+) -> impl IntoView
+where
+    R: Fn() -> Option<Option<T>> + 'static,
+    F: Fn(Scope) -> V + 'static,
+    E: Fn() -> V + 'static,
+    C: Fn(T) -> V + 'static,
+    V: IntoView,
+{
+    move || {
+        log!("doing read");
+        match read() {
+            Some(result) => match result {
+                Some(payload) => {
+                    log!("child");
+                    child(payload).into_view(cx)
+                }
+                None => {
+                    log!("error");
+                    error().into_view(cx)
+                }
+            },
+            None => {
+                log!("fallback");
+                fallback(cx).into_view(cx)
+            }
+        }
     }
 }
 

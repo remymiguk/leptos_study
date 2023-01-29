@@ -3,7 +3,6 @@ use leptos::Scope;
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
-
 use crate::app::{error::AppError, repository::product_repository};
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
@@ -17,6 +16,12 @@ pub struct Product {
 
 #[derive(Clone, Debug)]
 pub struct ProductModel {}
+
+impl Default for ProductModel {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 
 impl ProductModel {
     pub fn new() -> Self {

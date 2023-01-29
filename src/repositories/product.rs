@@ -61,7 +61,7 @@ impl Repository for ApiProductRepository {
     }
 
     async fn count(&self) -> Result<usize, AppError> {
-        todo!()
+        Ok(5)
     }
 
     async fn create(&self, _cx: Scope, _entity: Self::Entity) -> Result<Self::Entity, AppError> {
