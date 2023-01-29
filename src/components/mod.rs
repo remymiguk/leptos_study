@@ -3,3 +3,4 @@ pub mod nav;
 pub mod product_form;
 pub mod modal;
 pub mod pagination;
+pub mod hold_on;

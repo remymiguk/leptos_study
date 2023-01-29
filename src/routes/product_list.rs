@@ -1,12 +1,13 @@
 use crate::app::pagination::*;
 use crate::app::repository::product_repository;
+use crate::components::hold_on::*;
 use crate::components::pagination::*;
 use crate::models::product::Product;
 use leptos::*;
 use leptos_router::*;
 
 #[component]
-pub fn Products(cx: Scope) -> impl IntoView {
+pub fn ProductList(cx: Scope) -> impl IntoView {
     let (page_read, page_write) = create_signal(cx, 1);
 
     let offset_read = move || page_read() - 1;
@@ -66,24 +67,26 @@ pub fn Products(cx: Scope) -> impl IntoView {
         _ => 0,
     };
 
-    let on_page_click = move |page: usize| page_write.set(page);
+    let list_reader = create_memo(cx, move |_| match (products.read(), count.read()) {
+        (Some(Ok(products)), Some(Ok(count))) => Some(Some((products, count))),
+        (Some(Err(_)), _) | (_, Some(Err(_))) => Some(None),
+        _ => None,
+    });
 
-    // TODO: use Transition instead of Suspense
+    let on_page_click = move |page: usize| page_write.set(page);
 
     view! {
         cx,
-        <Suspense fallback=|| view! { cx, "Loading..." }>
-            {move || match (products.read(), count.read()) {
-                (None, None) => None,
-                (Some(Ok(products)), Some(Ok(count))) =>
-                    Some(view! {
-                        cx,
-                        <LoadedProducts products count />
-                        <Pagination max=max_page() current=page_read() on_page_click />
-                    }.into_view(cx)),
-                (_ ,_) => Some(view! { cx,  <p>{"Error loading products"}</p> }.into_view(cx)),
-            }}
-        </Suspense>
+        <HoldOn
+            read={list_reader}
+            fallback={move ||view! { cx, "Loading..." }.into_view(cx)}
+            error={move ||view! { cx, <div class="item-view">"Error loading this product."</div> }.into_view(cx)}
+            child={move |(products, count)| view! {
+                cx,
+                <LoadedProducts products count/>
+                <Pagination max=max_page() current=page_read() on_page_click/>
+            }.into_view(cx)}
+        />
     }
 }
 
