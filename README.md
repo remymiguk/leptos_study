@@ -1,7 +1,7 @@
 # TODO
 
 Start product server:
---addr '127.0.0.1:8080' --cors-allow-origin 'http://127.0.0.1:3000'
+cargo run -- --addr '127.0.0.1:8080' --cors-allow-origin 'http://127.0.0.1:3000'
 
 - Problem:
 

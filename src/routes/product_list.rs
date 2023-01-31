@@ -3,17 +3,17 @@ use crate::app::repository::product_repository;
 use crate::components::hold_on::*;
 use crate::components::pagination::*;
 use crate::models::product::Product;
+use crate::models::product::ProductModel;
+use crate::states::app_state::StateGetter;
 use leptos::*;
+use leptos_meta::provide_meta_context;
 use leptos_router::*;
 
 #[component]
 pub fn ProductList(cx: Scope) -> impl IntoView {
-    let (page_read, page_write) = create_signal(cx, 1);
+    let model = ProductModel::new(cx);
 
-    let offset_read = move || page_read() - 1;
-
-    let (limit_read, limit_write) = create_signal(cx, 3);
-
+    // { ******** old
     // let query = use_query_map(cx);
 
     // let offset = move || {
@@ -38,50 +38,29 @@ pub fn ProductList(cx: Scope) -> impl IntoView {
     //         limit
     //     })
     // };
+    //
+    // } ******** old
 
-    let count = create_local_resource(
-        cx,
-        || {},
-        move |_| async move {
-            product_repository()
-                .count()
-                .await
-                .map_err(|e| error!("{e}"))
-        },
-    );
-
-    let products = create_local_resource(
-        cx,
-        move || (offset_read(), limit_read()),
-        move |(offset, limit)| async move {
-            product_repository()
-                .list(cx, Limit(limit), Offset(offset))
-                .await
-                .map_err(|e| error!("{e}"))
-        },
-    );
-
-    // Calc max page
-    let max_page = move || match count.read() {
-        Some(Ok(count)) => (count as f32 / limit_read() as f32).ceil() as usize,
-        _ => 0,
-    };
-
-    let list_reader = create_memo(cx, move |_| match (products.read(), count.read()) {
-        (Some(Ok(products)), Some(Ok(count))) => Some(Some((products, count))),
-        (Some(Err(_)), _) | (_, Some(Err(_))) => Some(None),
-        _ => None,
-    });
+    let page_write = model.page_write;
+    let list_reader = model.list_reader;
+    let max_page = model.max_page;
+    let page_read = model.page_read;
 
     let on_page_click = move |page: usize| page_write.set(page);
 
+    // let (model_read, _) = create_signal(cx, model);
+    // provide_context(cx, StateGetter(model_read));
+
+    // let (model_read, _) = create_signal(cx, model);
+    provide_context(cx, model);
+
     view! {
         cx,
-        <HoldOn
+        <HoldOnCx
             read={list_reader}
-            fallback={move ||view! { cx, "Loading..." }.into_view(cx)}
-            error={move ||view! { cx, <div class="item-view">"Error loading this product."</div> }.into_view(cx)}
-            child={move |(products, count)| view! {
+            fallback={move |cx|view! { cx, "Loading..." }.into_view(cx)}
+            error={move |cx|view! { cx, <div class="item-view">"Error loading this product."</div> }.into_view(cx)}
+            child={move |cx, (products, count)| view! {
                 cx,
                 <LoadedProducts products count/>
                 <Pagination max=max_page() current=page_read() on_page_click/>

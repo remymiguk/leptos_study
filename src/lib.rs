@@ -1,3 +1,5 @@
+#![feature(return_position_impl_trait_in_trait)]
+
 pub mod api;
 pub mod app;
 pub mod components;
@@ -15,14 +17,14 @@ pub mod utils;
 #[wasm_bindgen::prelude::wasm_bindgen]
 pub fn hydrate() {
     use crate::app::repository::*;
-    use crate::repositories::product::ApiProductRepository;
+    use crate::repositories::product::*;
     use crate::routes::app::*;
     use leptos::view;
 
     _ = console_log::init_with_level(log::Level::Debug);
     console_error_panic_hook::set_once();
 
-    set_product_repository(ApiProductRepository::new());
+    set_product_repository(BufferProductRepository::new()); // ApiProductRepository
 
     leptos::mount_to_body(move |cx| {
         view! { cx, <App/> }

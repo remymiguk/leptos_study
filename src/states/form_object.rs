@@ -44,7 +44,7 @@ pub fn validators_by_field(
 
 #[derive(Clone)]
 pub struct FormObject<T: Object> {
-    object_read_signal: Memo<Option<(JsonMap<T>, ComponentMap)>>,
+    object_read_signal: Memo<(JsonMap<T>, ComponentMap)>,
     object_writer_signal: WriteSignal<T>,
 }
 
@@ -86,7 +86,7 @@ impl<T: Object> FormObject<T> {
         let content_s = move || {
             let content_signal = content_signal();
             info!("content_signal: `{content_signal:?}`");
-            content_signal.map(|cs| cs.0)
+            content_signal.0
         };
 
         let is_valid_signal = self.memo_valid(cx, field_name.clone());
@@ -146,13 +146,10 @@ impl<T: Object> FormObject<T> {
         cx: Scope,
         field_name: String,
         value_type: ValueType,
-    ) -> Memo<Option<(String, JsonMap<T>)>> {
+    ) -> Memo<(String, JsonMap<T>)> {
         let read_signal = self.object_read_signal;
         create_memo(cx, move |_| {
-            let json_map = match read_signal() {
-                Some(json_map) => json_map,
-                None => return None,
-            };
+            let json_map = read_signal();
             let user_json = json_map.0;
             let value_j = json_map.1.map().get(&field_name).unwrap().value.clone();
 
@@ -160,7 +157,7 @@ impl<T: Object> FormObject<T> {
             info!(
                 "inside memo content: `{field_name}` value: `{value_s}` user_json: `{user_json:?}`"
             );
-            Some((value_s, user_json))
+            (value_s, user_json)
         })
     }
 
@@ -168,7 +165,7 @@ impl<T: Object> FormObject<T> {
         let read_signal = self.object_read_signal;
         create_memo(cx, move |_| {
             let json_map = read_signal();
-            json_map.and_then(|jm| jm.1.map().get(&field_name).unwrap().hint.clone())
+            json_map.1.map().get(&field_name).unwrap().hint.clone()
         })
     }
 
@@ -177,8 +174,12 @@ impl<T: Object> FormObject<T> {
         create_memo(cx, move |_| {
             let json_map = read_signal();
             json_map
-                .and_then(|jm| jm.1.map().get(&field_name).unwrap().valid)
-                .unwrap_or(true)
+                .1
+                .map()
+                .get(&field_name)
+                .unwrap()
+                .valid
+                .unwrap_or_else(|| true)
         })
     }
 
@@ -188,11 +189,7 @@ impl<T: Object> FormObject<T> {
 
         move |e: Event| {
             let value_s = event_target_value(&e);
-            let component_map = match read_signal.get() {
-                Some((_, component_map)) => component_map,
-                None => return,
-            };
-            let mut form_map = JsonMap::new(component_map.object());
+            let mut form_map = JsonMap::new(read_signal.get().1.object());
 
             let value_s = if value_s.is_empty() {
                 None

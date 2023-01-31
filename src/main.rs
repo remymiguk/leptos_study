@@ -41,13 +41,13 @@ async fn main() {
 pub fn main() {
     use leptos::*;
     use leptos_study::app::repository::*;
-    use leptos_study::repositories::product::ApiProductRepository;
+    use leptos_study::repositories::product::*;
     use leptos_study::routes::app::*;
 
     _ = console_log::init_with_level(log::Level::Info);
     console_error_panic_hook::set_once();
 
-    set_product_repository(ApiProductRepository::new());
+    set_product_repository(BufferProductRepository::new()); // ApiProductRepository
 
     mount_to_body(|cx| {
         view! { cx, <App/> }
