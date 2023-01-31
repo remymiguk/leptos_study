@@ -1,5 +1,6 @@
 use crate::components::app_routes::*;
 use crate::components::nav::*;
+use crate::models::product::ProductModel;
 // use crate::models::product::ProductModel;
 use crate::states::app_state::AppState;
 use crate::states::app_state::StateGetter;
@@ -19,6 +20,7 @@ pub fn App(cx: Scope) -> impl IntoView {
 
     provide_context(cx, StateSetter(set_app_state));
     provide_context(cx, StateGetter(app_state));
+    provide_context(cx, Option::<ProductModel>::None);
 
     view! {
             cx,

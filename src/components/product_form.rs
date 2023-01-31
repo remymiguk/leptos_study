@@ -7,17 +7,14 @@ use crate::{
 };
 use leptos::*;
 use leptos_router::use_params_map;
-use log::info;
 use uuid::Uuid;
 
 #[component]
 pub fn ProductForm(cx: Scope) -> impl IntoView {
-    info!("##################");
-
     let params = use_params_map(cx);
 
     //let model = use_context::<StateGetter<ProductModel>>(cx).unwrap().0();
-    let model = use_context::<ProductModel>(cx).unwrap();
+    let model = use_context::<Option<ProductModel>>(cx).unwrap().unwrap();
 
     let product = create_local_resource(
         cx,
@@ -43,10 +40,10 @@ pub fn ProductForm(cx: Scope) -> impl IntoView {
     view! {
         cx,
         <HoldOn
-            read={move || product.read()}
-            fallback={move ||view! { cx, "Loading..." }.into_view(cx)}
-            error={move ||view! { cx, <div class="item-view">"Error loading this product."</div> }.into_view(cx)}
-            child={move |product| view! { cx, <LoadedProductForm product/> }.into_view(cx)}
+            read=move || product.read()
+            fallback=move ||view! { cx, "Loading..." }.into_view(cx)
+            error=move ||view! { cx, <div class="item-view">"Error loading this product."</div> }.into_view(cx)
+            child=move |product| view! { cx, <LoadedProductForm product/> }.into_view(cx)
         />
     }
 }
