@@ -6,6 +6,7 @@ use crate::app::{
 use chrono::NaiveDateTime;
 use leptos::Scope;
 use leptos::*;
+use log::info;
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
@@ -53,6 +54,7 @@ impl ProductModel {
         // @@@ add loading, error result
         let update_read = create_local_resource(cx, update_read, move |payload| async move {
             if let Some(payload) = payload {
+                info!("inside update_read {payload:?}");
                 product_repository()
                     .update(cx, payload)
                     .await

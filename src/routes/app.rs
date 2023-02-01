@@ -3,6 +3,7 @@ use crate::components::nav::*;
 use crate::models::product::ProductModel;
 // use crate::models::product::ProductModel;
 use crate::states::app_state::declare_state;
+use crate::states::app_state::write_global_state;
 use crate::states::app_state::AppState;
 use crate::states::app_state::StateGetter;
 use crate::states::app_state::StateSetter;
@@ -20,6 +21,10 @@ pub fn App(cx: Scope) -> impl IntoView {
     provide_context(cx, StateGetter(app_state));
 
     declare_state::<ProductModel>(cx);
+
+    // let model = try_read_global_state(cx, || ProductModel::new(cx));
+    let model = ProductModel::new(cx);
+    write_global_state(cx, model);
 
     view! {
             cx,

@@ -8,6 +8,7 @@ use crate::{
 };
 use leptos::*;
 use leptos_router::use_params_map;
+use log::info;
 use uuid::Uuid;
 
 #[component]
@@ -65,6 +66,8 @@ pub fn LoadedProductForm(cx: Scope, product: Product) -> impl IntoView {
 
     let on_save = move |_| {
         // model_list.update(model.get());
+        let o = object_read();
+        info!("saving ... {o:?}");
         model_list.update_write.set(Some(object_read()));
         navigator_back();
     };
