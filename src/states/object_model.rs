@@ -108,14 +108,14 @@ impl<T: Object> ObjectModelBuilder<T> {
 
 #[derive(Debug, Clone)]
 pub struct ObjectModel<T: Object> {
-    pub public_object_writer: WriteSignal<T>,
-    pub public_component_reader: Memo<(JsonMap<T>, ComponentMap)>,
-    pub public_object_reader: Memo<T>,
+    pub public_object_write: WriteSignal<T>,
+    pub public_component_read: Memo<(JsonMap<T>, ComponentMap)>,
+    pub public_object_read: Memo<T>,
 }
 
 impl<T: Object> ObjectModel<T> {
     pub fn signal(&self) -> (Memo<T>, WriteSignal<T>) {
-        (self.public_object_reader, self.public_object_writer)
+        (self.public_object_read, self.public_object_write)
     }
 
     pub fn new(cx: Scope, object: T, validators: impl Into<Validators>) -> Self {
@@ -264,9 +264,9 @@ impl<T: Object> ObjectModel<T> {
         });
 
         Self {
-            public_object_writer,
-            public_component_reader,
-            public_object_reader,
+            public_object_write: public_object_writer,
+            public_component_read: public_component_reader,
+            public_object_read: public_object_reader,
         }
     }
 }

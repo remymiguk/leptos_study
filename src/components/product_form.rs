@@ -55,6 +55,9 @@ pub fn LoadedProductForm(cx: Scope, product: Product) -> impl IntoView {
     let model_list = read_global_state::<ProductModel>(cx);
 
     let model = ObjectModelBuilder::new(cx, product).build();
+
+    let object_read = model.public_object_read;
+
     let fo = FormObject::new(model);
 
     let confirm_cancel = Confirmation::new(cx);
@@ -62,6 +65,7 @@ pub fn LoadedProductForm(cx: Scope, product: Product) -> impl IntoView {
 
     let on_save = move |_| {
         // model_list.update(model.get());
+        model_list.update_write.set(Some(object_read()));
         navigator_back();
     };
 
@@ -70,6 +74,7 @@ pub fn LoadedProductForm(cx: Scope, product: Product) -> impl IntoView {
             {confirm_cancel.component(cx, "Confirm cancellation?", move |_| navigator_back())}
             {confirm_ok.component(cx, "Confirm saving?", on_save)}
 
+            <div>{move ||format!("Object content: {:?}", object_read())}</div>
 
             <InputBind fo=&fo input_type="text" literal="Id" field_name="id" placeholder="Id"/>
             <InputBind fo=&fo input_type="text" literal="Description" field_name="description" placeholder="Description"/>

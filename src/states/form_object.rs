@@ -50,8 +50,8 @@ pub struct FormObject<T: Object> {
 
 impl<T: Object> FormObject<T> {
     pub fn new(object_model: ObjectModel<T>) -> Self {
-        let object_read_signal = object_model.public_component_reader;
-        let object_writer_signal = object_model.public_object_writer;
+        let object_read_signal = object_model.public_component_read;
+        let object_writer_signal = object_model.public_object_write;
 
         Self {
             object_read_signal,

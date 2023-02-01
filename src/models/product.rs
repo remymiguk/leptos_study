@@ -28,6 +28,7 @@ pub struct ProductModel {
     pub max_page: Memo<usize>,
     pub list_reader: Memo<Option<Option<(Vec<Product>, usize)>>>,
     pub version_write: WriteSignal<usize>,
+    pub update_write: WriteSignal<Option<Product>>,
 }
 
 impl ProductModel {
@@ -50,13 +51,14 @@ impl ProductModel {
         let (update_read, update_write) = create_signal(cx, Option::<Product>::None);
 
         // @@@ add loading, error result
-        let _save = create_local_resource(cx, update_read, move |payload| async move {
+        let update_read = create_local_resource(cx, update_read, move |payload| async move {
             if let Some(payload) = payload {
                 product_repository()
                     .update(cx, payload)
                     .await
                     .map_err(|e| error!("{e}"))
                     .unwrap();
+                version_write.update(|v| *v += 1);
             };
         });
 
@@ -93,6 +95,7 @@ impl ProductModel {
             max_page,
             list_reader,
             version_write,
+            update_write,
         }
     }
 

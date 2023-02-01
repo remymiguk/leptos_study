@@ -9,7 +9,8 @@ use leptos_router::*;
 
 #[component]
 pub fn ProductList(cx: Scope) -> impl IntoView {
-    let model = try_read_global_state(cx, || ProductModel::new(cx));
+    // let model = try_read_global_state(cx, || ProductModel::new(cx));
+    let model = ProductModel::new(cx);
 
     // { ******** old
     // let query = use_query_map(cx);
