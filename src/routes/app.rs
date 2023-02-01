@@ -2,6 +2,7 @@ use crate::components::app_routes::*;
 use crate::components::nav::*;
 use crate::models::product::ProductModel;
 // use crate::models::product::ProductModel;
+use crate::states::app_state::declare_state;
 use crate::states::app_state::AppState;
 use crate::states::app_state::StateGetter;
 use crate::states::app_state::StateSetter;
@@ -13,14 +14,12 @@ use leptos_router::*;
 pub fn App(cx: Scope) -> impl IntoView {
     provide_meta_context(cx);
 
-    // let (model, _) = create_signal(cx, ProductModel::new());
-    // provide_context(cx, StateGetter(model));
-
     let (app_state, set_app_state) = create_signal(cx, AppState::default());
 
     provide_context(cx, StateSetter(set_app_state));
     provide_context(cx, StateGetter(app_state));
-    provide_context(cx, Option::<ProductModel>::None);
+
+    declare_state::<ProductModel>(cx);
 
     view! {
             cx,

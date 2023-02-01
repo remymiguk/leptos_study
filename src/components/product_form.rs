@@ -1,4 +1,5 @@
 use crate::components::modal::Confirmation;
+use crate::states::app_state::read_global_state;
 use crate::utils::navigator_back;
 use crate::{
     components::hold_on::*,
@@ -13,8 +14,7 @@ use uuid::Uuid;
 pub fn ProductForm(cx: Scope) -> impl IntoView {
     let params = use_params_map(cx);
 
-    //let model = use_context::<StateGetter<ProductModel>>(cx).unwrap().0();
-    let model = use_context::<Option<ProductModel>>(cx).unwrap().unwrap();
+    let model = read_global_state::<ProductModel>(cx);
 
     let product = create_local_resource(
         cx,
@@ -25,6 +25,8 @@ pub fn ProductForm(cx: Scope) -> impl IntoView {
                 if id.is_empty() {
                     None
                 } else {
+                    // @@@ EXPORT this read as signal
+
                     model
                         .clone()
                         .read(cx, id.parse::<Uuid>().unwrap())
@@ -50,16 +52,23 @@ pub fn ProductForm(cx: Scope) -> impl IntoView {
 
 #[component]
 pub fn LoadedProductForm(cx: Scope, product: Product) -> impl IntoView {
+    let model_list = read_global_state::<ProductModel>(cx);
+
     let model = ObjectModelBuilder::new(cx, product).build();
     let fo = FormObject::new(model);
 
     let confirm_cancel = Confirmation::new(cx);
     let confirm_ok = Confirmation::new(cx);
 
+    let on_save = move |_| {
+        // model_list.update(model.get());
+        navigator_back();
+    };
+
     view! { cx,
         <div>
             {confirm_cancel.component(cx, "Confirm cancellation?", move |_| navigator_back())}
-            {confirm_ok.component(cx, "Confirm saving?", move |_| navigator_back())}
+            {confirm_ok.component(cx, "Confirm saving?", on_save)}
 
 
             <InputBind fo=&fo input_type="text" literal="Id" field_name="id" placeholder="Id"/>

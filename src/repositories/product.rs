@@ -11,7 +11,12 @@ use async_trait::async_trait;
 use core::fmt::Debug;
 use leptos::Scope;
 use log::info;
-use std::{fs, path::PathBuf};
+use std::{
+    cell::RefCell,
+    fs,
+    path::PathBuf,
+    sync::{Arc, Mutex},
+};
 use uuid::Uuid;
 
 static API_ROOT: &str = "http://127.0.0.1:8080/api";
@@ -184,13 +189,15 @@ static PRODUCTS_BUFFER: &str = r#"
 
 #[derive(Debug)]
 pub struct BufferProductRepository {
-    products: Vec<Product>,
+    products: Arc<Mutex<Vec<Product>>>,
 }
 
 impl BufferProductRepository {
     pub fn new() -> Self {
         let products: Vec<Product> = serde_json::from_str(PRODUCTS_BUFFER).unwrap();
-        Self { products }
+        Self {
+            products: Arc::new(Mutex::new(products)),
+        }
     }
 }
 
@@ -205,7 +212,13 @@ impl Repository for BufferProductRepository {
     type Entity = Product;
 
     async fn read(&self, _cx: Scope, id: Uuid) -> Result<Option<Self::Entity>, AppError> {
-        Ok(self.products.iter().find(|p| p.id == id).cloned())
+        Ok(self
+            .products
+            .lock()
+            .unwrap()
+            .iter()
+            .find(|p| p.id == id)
+            .cloned())
     }
 
     async fn list(
@@ -217,6 +230,8 @@ impl Repository for BufferProductRepository {
         info!("*** repository offset {} limit {}", offset.0, limit.0);
         let list = self
             .products
+            .lock()
+            .unwrap()
             .iter()
             .skip(offset.0 * limit.0)
             .take(limit.0)
@@ -226,15 +241,19 @@ impl Repository for BufferProductRepository {
     }
 
     async fn count(&self) -> Result<usize, AppError> {
-        Ok(self.products.len())
+        Ok(self.products.lock().unwrap().len())
     }
 
     async fn create(&self, _cx: Scope, _entity: Self::Entity) -> Result<Self::Entity, AppError> {
         todo!()
     }
 
-    async fn update(&self, _cx: Scope, _entity: Self::Entity) -> Result<Self::Entity, AppError> {
-        todo!()
+    async fn update(&self, _cx: Scope, entity: Self::Entity) -> Result<Self::Entity, AppError> {
+        let mut list = self.products.lock().unwrap();
+        if let Some(e) = list.iter_mut().find(|p| p.id == entity.id) {
+            *e = entity.clone();
+        };
+        Ok(entity)
     }
 
     async fn delete(&self, _cx: Scope, _id: Uuid) -> Result<Uuid, AppError> {

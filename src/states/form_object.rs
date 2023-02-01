@@ -171,7 +171,7 @@ impl<T: Object> FormObject<T> {
 
     fn memo_valid(&self, cx: Scope, field_name: String) -> Memo<bool> {
         let read_signal = self.object_read_signal;
-        create_memo(cx, move |_| {
+        create_memo(cx, move |_| -> bool {
             let json_map = read_signal();
             json_map
                 .1
@@ -179,7 +179,7 @@ impl<T: Object> FormObject<T> {
                 .get(&field_name)
                 .unwrap()
                 .valid
-                .unwrap_or_else(|| true)
+                .unwrap_or(true)
         })
     }
 

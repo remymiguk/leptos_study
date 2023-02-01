@@ -2,12 +2,14 @@ use crate::components::hold_on::*;
 use crate::components::pagination::*;
 use crate::models::product::Product;
 use crate::models::product::ProductModel;
+use crate::states::app_state::try_read_global_state;
+use crate::states::app_state::write_global_state;
 use leptos::*;
 use leptos_router::*;
 
 #[component]
 pub fn ProductList(cx: Scope) -> impl IntoView {
-    let model = ProductModel::new(cx);
+    let model = try_read_global_state(cx, || ProductModel::new(cx));
 
     // { ******** old
     // let query = use_query_map(cx);
@@ -44,11 +46,7 @@ pub fn ProductList(cx: Scope) -> impl IntoView {
 
     let on_page_click = move |page: usize| page_write.set(page);
 
-    // let (model_read, _) = create_signal(cx, model);
-    // provide_context(cx, StateGetter(model_read));
-
-    // let (model_read, _) = create_signal(cx, model);
-    provide_context(cx, Some(model));
+    write_global_state(cx, model);
 
     view! {
         cx,

@@ -21,37 +21,49 @@ pub struct Product {
 
 #[derive(Clone, Debug)]
 pub struct ProductModel {
-    pub count: Resource<(), Result<usize, ()>>,
-    pub products: Resource<(usize, usize), Result<Vec<Product>, ()>>,
+    pub count: Resource<usize, Result<usize, ()>>,
+    pub products: Resource<(usize, usize, usize), Result<Vec<Product>, ()>>,
     pub page_read: ReadSignal<usize>,
     pub page_write: WriteSignal<usize>,
     pub max_page: Memo<usize>,
     pub list_reader: Memo<Option<Option<(Vec<Product>, usize)>>>,
+    pub version_write: WriteSignal<usize>,
 }
 
 impl ProductModel {
     pub fn new(cx: Scope) -> Self {
+        let (version_read, version_write) = create_signal(cx, 0);
+
         let (page_read, page_write) = create_signal(cx, 1);
 
         let offset_read = move || page_read() - 1;
 
         let (limit_read, _limit_write) = create_signal(cx, 3);
 
-        let count = create_local_resource(
-            cx,
-            || {},
-            move |_| async move {
+        let count = create_local_resource(cx, version_read, move |_| async move {
+            product_repository()
+                .count()
+                .await
+                .map_err(|e| error!("{e}"))
+        });
+
+        let (update_read, update_write) = create_signal(cx, Option::<Product>::None);
+
+        // @@@ add loading, error result
+        let _save = create_local_resource(cx, update_read, move |payload| async move {
+            if let Some(payload) = payload {
                 product_repository()
-                    .count()
+                    .update(cx, payload)
                     .await
                     .map_err(|e| error!("{e}"))
-            },
-        );
+                    .unwrap();
+            };
+        });
 
         let products = create_local_resource(
             cx,
-            move || (offset_read(), limit_read()),
-            move |(offset, limit)| async move {
+            move || (version_read(), offset_read(), limit_read()),
+            move |(_, offset, limit)| async move {
                 product_repository()
                     .list(cx, Limit(limit), Offset(offset))
                     .await
@@ -80,14 +92,17 @@ impl ProductModel {
             page_write,
             max_page,
             list_reader,
+            version_write,
         }
     }
 
+    // @@@ EXPORT read as signal
     pub async fn read(&self, cx: Scope, id: Uuid) -> Result<Option<Product>, AppError> {
         product_repository().read(cx, id).await
     }
 
-    pub async fn update(&self, cx: Scope, entity: Product) -> Result<Product, AppError> {
+    pub async fn update(&mut self, cx: Scope, entity: Product) -> Result<Product, AppError> {
+        self.version_write.update(|version| *version += 1);
         product_repository().update(cx, entity).await
     }
 }

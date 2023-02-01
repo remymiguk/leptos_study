@@ -1,4 +1,4 @@
-use leptos::{ReadSignal, WriteSignal};
+use leptos::{create_signal, provide_context, use_context, ReadSignal, Scope, WriteSignal};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -45,3 +45,28 @@ pub struct StateSetter<T: 'static>(pub WriteSignal<T>);
 
 #[derive(Copy, Clone)]
 pub struct StateGetter<T: 'static>(pub ReadSignal<T>);
+
+pub fn try_read_global_state<T, F>(cx: Scope, create: F) -> T
+where
+    T: Clone + 'static,
+    F: Fn() -> T,
+{
+    use_context::<StateGetter<Option<T>>>(cx).unwrap().0().unwrap_or_else(create)
+}
+
+pub fn read_global_state<T: Clone + 'static>(cx: Scope) -> T {
+    use_context::<StateGetter<Option<T>>>(cx).unwrap().0().unwrap()
+}
+
+pub fn write_global_state<T: Clone + 'static>(cx: Scope, model: T) {
+    let model_write = use_context::<StateSetter<Option<T>>>(cx).unwrap();
+    model_write
+        .0
+        .update(move |model_opt| *model_opt = Some(model));
+}
+
+pub fn declare_state<T: Clone + 'static>(cx: Scope) {
+    let (product_model, set_product_model) = create_signal(cx, Option::<T>::None);
+    provide_context(cx, StateSetter(set_product_model));
+    provide_context(cx, StateGetter(product_model));
+}
