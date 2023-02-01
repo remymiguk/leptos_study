@@ -1,3 +1,4 @@
+use crate::app::error::AppError;
 use crate::components::modal::Confirmation;
 use crate::states::app_state::read_global_state;
 use crate::utils::navigator_back;
@@ -65,11 +66,15 @@ pub fn LoadedProductForm(cx: Scope, product: Product) -> impl IntoView {
     let confirm_ok = Confirmation::new(cx);
 
     let on_save = move |_| {
-        // model_list.update(model.get());
-        let o = object_read();
-        info!("saving ... {o:?}");
-        model_list.update_write.set(Some(object_read()));
-        navigator_back();
+        let (saved_read, saved_write) = create_signal(cx, Option::<Result<(), String>>::None);
+        let _ = create_memo(cx, move |_| {
+            if let Some(Ok(_)) = saved_read() {
+                navigator_back();
+            }
+        });
+        model_list
+            .update_write
+            .set(Some((saved_write, object_read())));
     };
 
     view! { cx,
