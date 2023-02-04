@@ -5,7 +5,7 @@ use crate::{
         pagination::{Limit, Offset},
         repository::RepositoryProvider,
     },
-    models::product::Product,
+    models::table_model::Product,
 };
 use async_trait::async_trait;
 use core::fmt::Debug;

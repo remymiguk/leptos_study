@@ -109,3 +109,23 @@ where
         _ => fallback().into_view(cx),
     }
 }
+
+pub fn read_resource<T>(loading: bool, payload: Option<T>) -> Option<T> {
+    match (loading, payload) {
+        (false, Some(payload)) => Some(payload),
+        _ => None,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn read_resource_test() {
+        assert_eq!(read_resource(false, None), Option::<usize>::None);
+        assert_eq!(read_resource(false, Some(1)), Some(1));
+        assert_eq!(read_resource(true, Some(1)), None);
+        assert_eq!(read_resource(true, None), Option::<usize>::None);
+    }
+}

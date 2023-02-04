@@ -54,7 +54,7 @@ impl fmt::Display for InputType {
             InputType::Time => String::from("time"),
             InputType::Url => String::from("url"),
         };
-        write!(f, "{}", s)
+        write!(f, "{s}")
     }
 }
 

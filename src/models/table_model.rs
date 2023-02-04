@@ -21,7 +21,7 @@ pub struct Product {
 }
 
 #[derive(Clone, Debug)]
-pub struct ModelList<T: std::fmt::Debug + Clone + Send + Sync + PartialEq + 'static> {
+pub struct TableModel<T: std::fmt::Debug + Clone + Send + Sync + PartialEq + 'static> {
     pub repository: Repository<T>,
     pub count: Resource<usize, Result<usize, ()>>,
     pub products: Resource<(usize, usize, usize), Result<Vec<T>, ()>>,
@@ -33,7 +33,7 @@ pub struct ModelList<T: std::fmt::Debug + Clone + Send + Sync + PartialEq + 'sta
     pub update_write: WriteSignal<Option<(WriteSignal<Option<Result<(), String>>>, T)>>,
 }
 
-impl<T: std::fmt::Debug + Clone + Send + Sync + PartialEq + 'static> ModelList<T> {
+impl<T: std::fmt::Debug + Clone + Send + Sync + PartialEq + 'static> TableModel<T> {
     pub fn new(cx: Scope) -> Self {
         let repository = get_repository::<T>().unwrap();
 

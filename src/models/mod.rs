@@ -1,1 +1,1 @@
-pub mod product;
+pub mod table_model;

@@ -29,7 +29,7 @@ pub struct InputAttributes {
     pub width: Option<u16>,
     pub height: Option<u16>,
     pub datalist: Option<Vec<String>>,
-    pub autocomplete: Option<bool>,
+    pub autocomplete: Option<String>,
     pub step: Option<Decimal>,
 }
 

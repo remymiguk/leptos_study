@@ -3,7 +3,7 @@ use crate::states::app_state::read_global_state;
 use crate::utils::navigator_back;
 use crate::{
     components::hold_on::*,
-    models::product::{ModelList, Product},
+    models::table_model::{Product, TableModel},
     states::{form_object::*, object_model::ObjectModelBuilder},
 };
 use leptos::*;
@@ -14,7 +14,7 @@ use uuid::Uuid;
 pub fn ProductForm(cx: Scope) -> impl IntoView {
     let params = use_params_map(cx);
 
-    let model = read_global_state::<ModelList<Product>>(cx);
+    let model = read_global_state::<TableModel<Product>>(cx);
 
     let product = create_local_resource(
         cx,
@@ -42,7 +42,7 @@ pub fn ProductForm(cx: Scope) -> impl IntoView {
     view! {
         cx,
         <HoldOn
-            read=move || product.read()
+            read=move || read_resource(product.loading()(), product.read())
             fallback=move ||view! { cx, "Loading..." }.into_view(cx)
             error=move ||view! { cx, <div class="item-view">"Error loading this product."</div> }.into_view(cx)
             child=move |product| view! { cx, <LoadedProductForm product/> }.into_view(cx)
@@ -52,7 +52,7 @@ pub fn ProductForm(cx: Scope) -> impl IntoView {
 
 #[component]
 pub fn LoadedProductForm(cx: Scope, product: Product) -> impl IntoView {
-    let model_list = read_global_state::<ModelList<Product>>(cx);
+    let model_list = read_global_state::<TableModel<Product>>(cx);
 
     let model = ObjectModelBuilder::new(cx, product).build();
 
@@ -82,9 +82,9 @@ pub fn LoadedProductForm(cx: Scope, product: Product) -> impl IntoView {
 
             <div>{move ||format!("Object content: {:?}", object_read())}</div>
 
-            <InputBind fo=&fo input_type="text" literal="Id" field_name="id" placeholder="Id"/>
+            <InputBind fo=&fo input_type="uuid" literal="Id" field_name="id" placeholder="Id"/>
             <InputBind fo=&fo input_type="text" literal="Description" field_name="description" placeholder="Description"/>
-            <InputBind fo=&fo input_type="text" literal="Price" field_name="price" placeholder="Price"/>
+            <InputBind fo=&fo input_type="decimal" literal="Price" field_name="price" placeholder="Price"/>
             <br/>
             <br/>
 

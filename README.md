@@ -19,6 +19,13 @@ cargo run -- --addr '127.0.0.1:8080' --cors-allow-origin 'http://127.0.0.1:3000'
 
 - [ ] Maybe to create a Table/Grid model, to manage pagination, count, crud, etc.
 
+==
+
+# Roxxies
+
+Web frameworks in Rust don't have goal to deal with common enterprise necessities.
+Per example, have a reusable columnar data model, bind data model into visual componentes.
+
 # Leptos study project Axum
 
 It showcases Leptos' ability to create both a client-side rendered app, and a server side rendered app with hydration, in a single repository.
