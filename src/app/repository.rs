@@ -68,7 +68,7 @@ impl<T: std::fmt::Debug + Clone + Send + Sync + 'static> RepositoryProvider for 
     type Entity = T;
 
     async fn read(&self, cx: Scope, id: Uuid) -> Result<Option<Self::Entity>, AppError> {
-        self.read(cx, id).await
+        self.repository.read(cx, id).await
     }
 
     async fn list(
@@ -77,23 +77,23 @@ impl<T: std::fmt::Debug + Clone + Send + Sync + 'static> RepositoryProvider for 
         limit: Limit,
         offset: Offset,
     ) -> Result<Vec<Self::Entity>, AppError> {
-        self.list(cx, limit, offset).await
+        self.repository.list(cx, limit, offset).await
     }
 
     async fn count(&self) -> Result<usize, AppError> {
-        self.count().await
+        self.repository.count().await
     }
 
     async fn create(&self, cx: Scope, entity: Self::Entity) -> Result<Self::Entity, AppError> {
-        self.create(cx, entity).await
+        self.repository.create(cx, entity).await
     }
 
     async fn update(&self, cx: Scope, entity: Self::Entity) -> Result<Self::Entity, AppError> {
-        self.update(cx, entity).await
+        self.repository.update(cx, entity).await
     }
 
     async fn delete(&self, cx: Scope, id: Uuid) -> Result<Uuid, AppError> {
-        self.delete(cx, id).await
+        self.repository.delete(cx, id).await
     }
 
     fn as_any(&self) -> &dyn Any {
