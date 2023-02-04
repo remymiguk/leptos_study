@@ -1,3 +1,5 @@
+use crate::{models::product::Product, repositories::product::BufferProductRepositoryProvider};
+
 use super::{
     error::AppError,
     pagination::{Limit, Offset},
@@ -5,6 +7,7 @@ use super::{
 use async_trait::async_trait;
 use dyn_clonable::{clonable, dyn_clone};
 use leptos::Scope;
+use log::info;
 use std::clone::Clone;
 use std::{any::Any, sync::Mutex};
 use uuid::Uuid;
@@ -110,6 +113,8 @@ pub fn add_repository_provider<T: std::fmt::Debug + Clone + 'static + Send + Syn
 pub fn add_repository<T: std::fmt::Debug + Clone + 'static + Send + Sync>(
     repository: Repository<T>,
 ) {
+    println!("registering {repository:?}");
+    info!("registering {repository:?}");
     let mut repos = REPOSITORIES.lock().unwrap();
     repos.push(Box::new(repository));
 }
@@ -124,5 +129,14 @@ where
             return Some(repo.clone());
         }
     }
+    println!("not found repository, len {}", repos.len());
+    info!("not found repository, len {}", repos.len());
     None
+}
+
+#[test]
+pub fn test() {
+    add_repository_provider(BufferProductRepositoryProvider::new()); //
+    let repository = get_repository::<Product>();
+    println!("{repository:?}");
 }

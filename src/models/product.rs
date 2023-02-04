@@ -1,7 +1,7 @@
 use crate::app::{
     error::AppError,
     pagination::{Limit, Offset},
-    repository::{get_repository, RepositoryProvider},
+    repository::{get_repository, Repository, RepositoryProvider},
 };
 use chrono::NaiveDateTime;
 use leptos::Scope;
@@ -21,19 +21,22 @@ pub struct Product {
 }
 
 #[derive(Clone, Debug)]
-pub struct ProductModel {
+pub struct ModelList<T: std::fmt::Debug + Clone + Send + Sync + PartialEq + 'static> {
+    pub repository: Repository<T>,
     pub count: Resource<usize, Result<usize, ()>>,
-    pub products: Resource<(usize, usize, usize), Result<Vec<Product>, ()>>,
+    pub products: Resource<(usize, usize, usize), Result<Vec<T>, ()>>,
     pub page_read: ReadSignal<usize>,
     pub page_write: WriteSignal<usize>,
     pub max_page: Memo<usize>,
-    pub list_reader: Memo<Option<Option<(Vec<Product>, usize)>>>,
+    pub list_reader: Memo<Option<Option<(Vec<T>, usize)>>>,
     pub version_write: WriteSignal<usize>,
-    pub update_write: WriteSignal<Option<(WriteSignal<Option<Result<(), String>>>, Product)>>,
+    pub update_write: WriteSignal<Option<(WriteSignal<Option<Result<(), String>>>, T)>>,
 }
 
-impl ProductModel {
+impl<T: std::fmt::Debug + Clone + Send + Sync + PartialEq + 'static> ModelList<T> {
     pub fn new(cx: Scope) -> Self {
+        let repository = get_repository::<T>().unwrap();
+
         let (version_read, version_write) = create_signal(cx, 0);
 
         let (page_read, page_write) = create_signal(cx, 1);
@@ -42,48 +45,57 @@ impl ProductModel {
 
         let (limit_read, _limit_write) = create_signal(cx, 3);
 
-        let count = create_local_resource(cx, version_read, move |_| async move {
-            get_repository::<Product>()
-                .unwrap()
-                .count()
-                .await
-                .map_err(|e| error!("{e}"))
-        });
+        let count = {
+            let repo = repository.clone();
+            create_local_resource(cx, version_read, move |_| {
+                let repo = repo.clone();
+                async move { repo.count().await.map_err(|e| error!("{e}")) }
+            })
+        };
 
         let (update_read, update_write) = create_signal(
             cx,
-            Option::<(WriteSignal<Option<Result<(), String>>>, Product)>::None,
+            Option::<(WriteSignal<Option<Result<(), String>>>, T)>::None,
         );
 
         // @@@ add loading, error result
-        let update_read = create_local_resource(cx, update_read, move |payload| async move {
-            if let Some((saved_write, payload)) = payload {
-                info!("inside update_read {payload:?}");
-                let result = get_repository::<Product>()
-                    .unwrap()
-                    .update(cx, payload)
-                    .await
-                    .map_err(|e| {
-                        error!("{e}");
-                        e.to_string()
-                    })
-                    .map(|_| ());
-                version_write.update(|v| *v += 1);
-                saved_write.set(Some(result));
-            };
-        });
+        let update_read = {
+            let repo = repository.clone();
+            create_local_resource(cx, update_read, move |payload| {
+                let repo = repo.clone();
+                async move {
+                    if let Some((saved_write, payload)) = payload {
+                        info!("inside update_read {payload:?}");
+                        let result = repo
+                            .update(cx, payload)
+                            .await
+                            .map_err(|e| {
+                                error!("{e}");
+                                e.to_string()
+                            })
+                            .map(|_| ());
+                        version_write.update(|v| *v += 1);
+                        saved_write.set(Some(result));
+                    }
+                }
+            })
+        };
 
-        let products = create_local_resource(
-            cx,
-            move || (version_read(), offset_read(), limit_read()),
-            move |(_, offset, limit)| async move {
-                get_repository::<Product>()
-                    .unwrap()
-                    .list(cx, Limit(limit), Offset(offset))
-                    .await
-                    .map_err(|e| error!("{e}"))
-            },
-        );
+        let products = {
+            let repo = repository.clone();
+            create_local_resource(
+                cx,
+                move || (version_read(), offset_read(), limit_read()),
+                move |(_, offset, limit)| {
+                    let repo = repo.clone();
+                    async move {
+                        repo.list(cx, Limit(limit), Offset(offset))
+                            .await
+                            .map_err(|e| error!("{e}"))
+                    }
+                },
+            )
+        };
 
         // Calc max page
         let max_page = create_memo(cx, move |_| match count.read() {
@@ -100,6 +112,7 @@ impl ProductModel {
         });
 
         Self {
+            repository,
             count,
             products,
             page_read,
@@ -112,15 +125,12 @@ impl ProductModel {
     }
 
     // @@@ EXPORT read as signal
-    pub async fn read(&self, cx: Scope, id: Uuid) -> Result<Option<Product>, AppError> {
-        get_repository::<Product>().unwrap().read(cx, id).await
+    pub async fn read(&self, cx: Scope, id: Uuid) -> Result<Option<T>, AppError> {
+        self.repository.read(cx, id).await
     }
 
-    pub async fn update(&mut self, cx: Scope, entity: Product) -> Result<Product, AppError> {
+    pub async fn update(&mut self, cx: Scope, entity: T) -> Result<T, AppError> {
         self.version_write.update(|version| *version += 1);
-        get_repository::<Product>()
-            .unwrap()
-            .update(cx, entity)
-            .await
+        self.repository.update(cx, entity).await
     }
 }

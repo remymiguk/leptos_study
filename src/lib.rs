@@ -1,5 +1,3 @@
-#![feature(return_position_impl_trait_in_trait)]
-
 pub mod api;
 pub mod app;
 pub mod components;

@@ -7,9 +7,13 @@ async fn main() {
     use axum::{extract::Extension, routing::get};
     use leptos::*;
     use leptos_axum::{generate_route_list, LeptosRoutes};
+    use leptos_study::app::repository::add_repository_provider;
     use leptos_study::file::file_and_error_handler;
+    use leptos_study::repositories::product::*;
     use leptos_study::routes::app::*;
     use std::sync::Arc;
+
+    add_repository_provider(BufferProductRepositoryProvider::new()); // ApiProductRepository
 
     // The URL path of the generated JS/WASM bundle from cargo-leptos
 

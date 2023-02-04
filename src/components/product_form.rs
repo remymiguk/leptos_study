@@ -1,22 +1,20 @@
-use crate::app::error::AppError;
 use crate::components::modal::Confirmation;
 use crate::states::app_state::read_global_state;
 use crate::utils::navigator_back;
 use crate::{
     components::hold_on::*,
-    models::product::{Product, ProductModel},
+    models::product::{ModelList, Product},
     states::{form_object::*, object_model::ObjectModelBuilder},
 };
 use leptos::*;
 use leptos_router::use_params_map;
-use log::info;
 use uuid::Uuid;
 
 #[component]
 pub fn ProductForm(cx: Scope) -> impl IntoView {
     let params = use_params_map(cx);
 
-    let model = read_global_state::<ProductModel>(cx);
+    let model = read_global_state::<ModelList<Product>>(cx);
 
     let product = create_local_resource(
         cx,
@@ -54,7 +52,7 @@ pub fn ProductForm(cx: Scope) -> impl IntoView {
 
 #[component]
 pub fn LoadedProductForm(cx: Scope, product: Product) -> impl IntoView {
-    let model_list = read_global_state::<ProductModel>(cx);
+    let model_list = read_global_state::<ModelList<Product>>(cx);
 
     let model = ObjectModelBuilder::new(cx, product).build();
 

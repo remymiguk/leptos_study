@@ -1,14 +1,14 @@
 use crate::components::hold_on::*;
 use crate::components::pagination::*;
+use crate::models::product::ModelList;
 use crate::models::product::Product;
-use crate::models::product::ProductModel;
 use crate::states::app_state::read_global_state;
 use leptos::*;
 use leptos_router::*;
 
 #[component]
 pub fn ProductList(cx: Scope) -> impl IntoView {
-    let model = read_global_state::<ProductModel>(cx);
+    let model = read_global_state::<ModelList<Product>>(cx);
 
     // { ******** old
     // let query = use_query_map(cx);
