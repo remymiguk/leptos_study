@@ -1,7 +1,7 @@
 use crate::app::{
     error::AppError,
     pagination::{Limit, Offset},
-    repository::product_repository,
+    repository::{get_repository, RepositoryProvider},
 };
 use chrono::NaiveDateTime;
 use leptos::Scope;
@@ -43,7 +43,8 @@ impl ProductModel {
         let (limit_read, _limit_write) = create_signal(cx, 3);
 
         let count = create_local_resource(cx, version_read, move |_| async move {
-            product_repository()
+            get_repository::<Product>()
+                .unwrap()
                 .count()
                 .await
                 .map_err(|e| error!("{e}"))
@@ -58,7 +59,8 @@ impl ProductModel {
         let update_read = create_local_resource(cx, update_read, move |payload| async move {
             if let Some((saved_write, payload)) = payload {
                 info!("inside update_read {payload:?}");
-                let result = product_repository()
+                let result = get_repository::<Product>()
+                    .unwrap()
                     .update(cx, payload)
                     .await
                     .map_err(|e| {
@@ -75,7 +77,8 @@ impl ProductModel {
             cx,
             move || (version_read(), offset_read(), limit_read()),
             move |(_, offset, limit)| async move {
-                product_repository()
+                get_repository::<Product>()
+                    .unwrap()
                     .list(cx, Limit(limit), Offset(offset))
                     .await
                     .map_err(|e| error!("{e}"))
@@ -110,11 +113,14 @@ impl ProductModel {
 
     // @@@ EXPORT read as signal
     pub async fn read(&self, cx: Scope, id: Uuid) -> Result<Option<Product>, AppError> {
-        product_repository().read(cx, id).await
+        get_repository::<Product>().unwrap().read(cx, id).await
     }
 
     pub async fn update(&mut self, cx: Scope, entity: Product) -> Result<Product, AppError> {
         self.version_write.update(|version| *version += 1);
-        product_repository().update(cx, entity).await
+        get_repository::<Product>()
+            .unwrap()
+            .update(cx, entity)
+            .await
     }
 }

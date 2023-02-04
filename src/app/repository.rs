@@ -1,15 +1,12 @@
-use std::{any::Any, sync::Mutex};
-
 use super::{
     error::AppError,
     pagination::{Limit, Offset},
 };
-use crate::{models::product::Product, repositories::product::BufferProductRepositoryProvider};
 use async_trait::async_trait;
 use dyn_clonable::{clonable, dyn_clone};
 use leptos::Scope;
-use once_cell::sync::OnceCell;
 use std::clone::Clone;
+use std::{any::Any, sync::Mutex};
 use uuid::Uuid;
 
 #[clonable]
@@ -101,26 +98,7 @@ impl<T: std::fmt::Debug + Clone + Send + Sync + 'static> RepositoryProvider for 
     }
 }
 
-static PRODUCT_REPOSITORY_INSTANCE: OnceCell<
-    Box<dyn RepositoryProvider<Entity = Product> + 'static + Send + Sync>,
-> = OnceCell::new();
-
-pub fn set_product_repository(
-    repository: impl RepositoryProvider<Entity = Product> + 'static + Send + Sync + std::fmt::Debug,
-) {
-    PRODUCT_REPOSITORY_INSTANCE
-        .set(Box::new(repository))
-        .unwrap();
-}
-
-pub fn product_repository(
-) -> &'static (dyn RepositoryProvider<Entity = Product> + 'static + Send + Sync) {
-    &**PRODUCT_REPOSITORY_INSTANCE.get().unwrap()
-}
-
 static REPOSITORIES: Mutex<Vec<Box<dyn Any + 'static + Send + Sync>>> = Mutex::new(vec![]);
-
-//OnceCell<Box<dyn Any + 'static + Send + Sync>> = OnceCell::new();
 
 pub fn add_repository_provider<T: std::fmt::Debug + Clone + 'static + Send + Sync>(
     repository_provider: impl RepositoryProvider<Entity = T> + 'static + Send + Sync,
@@ -147,14 +125,4 @@ where
         }
     }
     None
-}
-
-pub struct Repositories {}
-
-#[test]
-fn test() {
-    add_repository_provider(BufferProductRepositoryProvider::new());
-
-    let r = get_repository::<Product>();
-    println!("{r:?}");
 }
