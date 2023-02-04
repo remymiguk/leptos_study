@@ -47,7 +47,7 @@ pub fn main() {
     _ = console_log::init_with_level(log::Level::Info);
     console_error_panic_hook::set_once();
 
-    set_product_repository(BufferProductRepository::new()); // ApiProductRepository
+    set_product_repository(BufferProductRepositoryProvider::new()); // ApiProductRepository
 
     mount_to_body(|cx| {
         view! { cx, <App/> }

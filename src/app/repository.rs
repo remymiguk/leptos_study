@@ -4,15 +4,22 @@ use super::{
     error::AppError,
     pagination::{Limit, Offset},
 };
-use crate::{models::product::Product, repositories::product::BufferProductRepository};
+use crate::{models::product::Product, repositories::product::BufferProductRepositoryProvider};
 use async_trait::async_trait;
+use dyn_clonable::{clonable, dyn_clone};
 use leptos::Scope;
 use once_cell::sync::OnceCell;
+use std::clone::Clone;
 use uuid::Uuid;
+
+#[clonable]
+pub trait RepositoryClonable: Clone + std::fmt::Debug {}
+
+impl<T> RepositoryClonable for T where T: Clone + std::fmt::Debug {}
 
 /// Trait that defines common repository operations.
 #[async_trait(?Send)]
-pub trait Repository: std::fmt::Debug {
+pub trait RepositoryProvider: RepositoryClonable {
     type Entity;
 
     async fn read(&self, cx: Scope, id: Uuid) -> Result<Option<Self::Entity>, AppError>;
@@ -35,39 +42,119 @@ pub trait Repository: std::fmt::Debug {
     fn as_any(&self) -> &dyn Any;
 }
 
+#[derive(Debug)]
+pub struct Repository<T: std::fmt::Debug + Clone + Send + Sync + 'static> {
+    repository: Box<dyn RepositoryProvider<Entity = T> + Send + Sync + 'static>,
+}
+
+impl<T: std::fmt::Debug + Clone + Send + Sync + 'static> Repository<T> {
+    pub fn new(repository: impl RepositoryProvider<Entity = T> + Send + Sync + 'static) -> Self {
+        Self {
+            repository: Box::new(repository),
+        }
+    }
+}
+
+impl<T: std::fmt::Debug + Clone + Send + Sync + 'static> Clone for Repository<T> {
+    fn clone(&self) -> Self {
+        Self {
+            repository: dyn_clone::clone_box(&*self.repository),
+        }
+    }
+}
+
+#[async_trait(?Send)]
+impl<T: std::fmt::Debug + Clone + Send + Sync + 'static> RepositoryProvider for Repository<T> {
+    type Entity = T;
+
+    async fn read(&self, cx: Scope, id: Uuid) -> Result<Option<Self::Entity>, AppError> {
+        self.read(cx, id).await
+    }
+
+    async fn list(
+        &self,
+        cx: Scope,
+        limit: Limit,
+        offset: Offset,
+    ) -> Result<Vec<Self::Entity>, AppError> {
+        self.list(cx, limit, offset).await
+    }
+
+    async fn count(&self) -> Result<usize, AppError> {
+        self.count().await
+    }
+
+    async fn create(&self, cx: Scope, entity: Self::Entity) -> Result<Self::Entity, AppError> {
+        self.create(cx, entity).await
+    }
+
+    async fn update(&self, cx: Scope, entity: Self::Entity) -> Result<Self::Entity, AppError> {
+        self.update(cx, entity).await
+    }
+
+    async fn delete(&self, cx: Scope, id: Uuid) -> Result<Uuid, AppError> {
+        self.delete(cx, id).await
+    }
+
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+}
+
 static PRODUCT_REPOSITORY_INSTANCE: OnceCell<
-    Box<dyn Repository<Entity = Product> + 'static + Send + Sync>,
+    Box<dyn RepositoryProvider<Entity = Product> + 'static + Send + Sync>,
 > = OnceCell::new();
 
 pub fn set_product_repository(
-    repository: impl Repository<Entity = Product> + 'static + Send + Sync + std::fmt::Debug,
+    repository: impl RepositoryProvider<Entity = Product> + 'static + Send + Sync + std::fmt::Debug,
 ) {
     PRODUCT_REPOSITORY_INSTANCE
         .set(Box::new(repository))
         .unwrap();
 }
 
-pub fn product_repository() -> &'static (dyn Repository<Entity = Product> + 'static + Send + Sync) {
+pub fn product_repository(
+) -> &'static (dyn RepositoryProvider<Entity = Product> + 'static + Send + Sync) {
     &**PRODUCT_REPOSITORY_INSTANCE.get().unwrap()
 }
 
-static REPOSITORIES: OnceCell<Box<dyn Any + 'static + Send + Sync>> = OnceCell::new();
+static REPOSITORIES: Mutex<Vec<Box<dyn Any + 'static + Send + Sync>>> = Mutex::new(vec![]);
 
-pub fn add_repository(
-    repository: impl Repository<Entity = Product> + 'static + Send + Sync + std::fmt::Debug,
+//OnceCell<Box<dyn Any + 'static + Send + Sync>> = OnceCell::new();
+
+pub fn add_repository_provider<T: std::fmt::Debug + Clone + 'static + Send + Sync>(
+    repository_provider: impl RepositoryProvider<Entity = T> + 'static + Send + Sync,
 ) {
-    let repos = REPOSITORIES.lock().unwrap();
+    let repository = Repository::new(repository_provider);
+    add_repository(repository);
+}
+
+pub fn add_repository<T: std::fmt::Debug + Clone + 'static + Send + Sync>(
+    repository: Repository<T>,
+) {
+    let mut repos = REPOSITORIES.lock().unwrap();
     repos.push(Box::new(repository));
 }
 
+pub fn get_repository<T>() -> Option<Repository<T>>
+where
+    T: std::fmt::Debug + Clone + Send + Sync + 'static,
+{
+    let repos = REPOSITORIES.lock().unwrap();
+    for repo in &**repos {
+        if let Some(repo) = repo.downcast_ref::<Repository<T>>() {
+            return Some(repo.clone());
+        }
+    }
+    None
+}
+
+pub struct Repositories {}
+
 #[test]
 fn test() {
-    let repo: Box<dyn Repository<Entity = _> + 'static + Send + Sync> =
-        Box::new(BufferProductRepository::new());
+    add_repository_provider(BufferProductRepositoryProvider::new());
 
-    let any = (&*repo).as_any();
-
-    if let Some(repo) = any.downcast_ref::<&dyn Repository<Entity = Product>>() {
-        println!("repo!");
-    }
+    let r = get_repository::<Product>();
+    println!("{r:?}");
 }

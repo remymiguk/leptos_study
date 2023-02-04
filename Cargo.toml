@@ -8,7 +8,8 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 
-# wasm-timer = "0.2.5"
+downcast-rs = "1.2.0"
+
 voxi-core = { path = "../voxi-core", default-features = false, features = ["objects"]}
 
 email_address = "0.2.4"

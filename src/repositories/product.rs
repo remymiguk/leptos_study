@@ -3,7 +3,7 @@ use crate::{
     app::{
         error::AppError,
         pagination::{Limit, Offset},
-        repository::Repository,
+        repository::RepositoryProvider,
     },
     models::product::Product,
 };
@@ -12,7 +12,7 @@ use core::fmt::Debug;
 use leptos::Scope;
 use log::info;
 use std::{
-    cell::RefCell,
+    any::Any,
     fs,
     path::PathBuf,
     sync::{Arc, Mutex},
@@ -21,12 +21,12 @@ use uuid::Uuid;
 
 static API_ROOT: &str = "http://127.0.0.1:8080/api";
 
-#[derive(Debug)]
-pub struct ApiProductRepository {
+#[derive(Clone, Debug)]
+pub struct ApiProductRepositoryProvider {
     root_url: String,
 }
 
-impl ApiProductRepository {
+impl ApiProductRepositoryProvider {
     pub fn new() -> Self {
         Self {
             root_url: API_ROOT.to_string(),
@@ -38,14 +38,14 @@ impl ApiProductRepository {
     }
 }
 
-impl Default for ApiProductRepository {
+impl Default for ApiProductRepositoryProvider {
     fn default() -> Self {
         Self::new()
     }
 }
 
 #[async_trait(?Send)]
-impl Repository for ApiProductRepository {
+impl RepositoryProvider for ApiProductRepositoryProvider {
     type Entity = Product;
 
     async fn read(&self, cx: Scope, id: Uuid) -> Result<Option<Self::Entity>, AppError> {
@@ -80,17 +80,21 @@ impl Repository for ApiProductRepository {
     async fn delete(&self, _cx: Scope, _id: Uuid) -> Result<Uuid, AppError> {
         todo!()
     }
+
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
 }
 
 static MOCK_DIR: &str = "./resources/";
 static MOCK_FILE: &str = "products.json";
 
-#[derive(Debug)]
-pub struct MockProductRepository {
+#[derive(Clone, Debug)]
+pub struct MockProductRepositoryProvider {
     products: Vec<Product>,
 }
 
-impl MockProductRepository {
+impl MockProductRepositoryProvider {
     pub fn new() -> Self {
         let path = PathBuf::from(MOCK_DIR);
         let content = fs::read_to_string(path.join(MOCK_FILE)).unwrap();
@@ -99,14 +103,14 @@ impl MockProductRepository {
     }
 }
 
-impl Default for MockProductRepository {
+impl Default for MockProductRepositoryProvider {
     fn default() -> Self {
         Self::new()
     }
 }
 
 #[async_trait(?Send)]
-impl Repository for MockProductRepository {
+impl RepositoryProvider for MockProductRepositoryProvider {
     type Entity = Product;
 
     async fn read(&self, _cx: Scope, id: Uuid) -> Result<Option<Self::Entity>, AppError> {
@@ -144,6 +148,10 @@ impl Repository for MockProductRepository {
 
     async fn delete(&self, _cx: Scope, _id: Uuid) -> Result<Uuid, AppError> {
         todo!()
+    }
+
+    fn as_any(&self) -> &dyn Any {
+        self
     }
 }
 
@@ -187,12 +195,12 @@ static PRODUCTS_BUFFER: &str = r#"
 ]
 "#;
 
-#[derive(Debug)]
-pub struct BufferProductRepository {
+#[derive(Clone, Debug)]
+pub struct BufferProductRepositoryProvider {
     products: Arc<Mutex<Vec<Product>>>,
 }
 
-impl BufferProductRepository {
+impl BufferProductRepositoryProvider {
     pub fn new() -> Self {
         let products: Vec<Product> = serde_json::from_str(PRODUCTS_BUFFER).unwrap();
         Self {
@@ -201,14 +209,14 @@ impl BufferProductRepository {
     }
 }
 
-impl Default for BufferProductRepository {
+impl Default for BufferProductRepositoryProvider {
     fn default() -> Self {
         Self::new()
     }
 }
 
 #[async_trait(?Send)]
-impl Repository for BufferProductRepository {
+impl RepositoryProvider for BufferProductRepositoryProvider {
     type Entity = Product;
 
     async fn read(&self, _cx: Scope, id: Uuid) -> Result<Option<Self::Entity>, AppError> {
@@ -259,4 +267,30 @@ impl Repository for BufferProductRepository {
     async fn delete(&self, _cx: Scope, _id: Uuid) -> Result<Uuid, AppError> {
         todo!()
     }
+
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+}
+
+/// Crate from https://crates.io/crates/dyn-clonable
+use dyn_clonable::*;
+
+#[clonable]
+trait MyTrait: Clone + std::fmt::Debug {}
+
+#[derive(Clone, Debug)]
+struct MyObject(usize);
+
+impl MyTrait for MyObject {}
+
+#[test]
+fn test() {
+    let o = MyObject(1);
+    let t: Box<dyn MyTrait> = Box::new(o);
+    let c1 = t.clone();
+
+    let r = &*t;
+    let c2 = dyn_clone::clone_box(r);
+    println!("clones {c1:?} {c2:?}");
 }
