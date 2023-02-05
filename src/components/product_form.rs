@@ -1,5 +1,6 @@
 use crate::components::modal::Confirmation;
 use crate::states::app_state::read_global_state;
+use crate::states::input_bind::*;
 use crate::utils::navigator_back;
 use crate::{
     components::hold_on::*,

@@ -1,4 +1,5 @@
 use crate::components::modal::Confirmation;
+use crate::states::input_bind::*;
 use crate::states::{
     app_state::{AppState, LoggedUser, StateSetter},
     email_validator::ValidatorEmail,

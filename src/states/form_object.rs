@@ -5,11 +5,9 @@ use super::{
     object_model::{ComponentMap, ObjectModel},
     validator::ValidatorProvider,
 };
-use crate::states::input_mode::InputMode;
 use crate::states::object::Object;
 use leptos::*;
 use log::info;
-use rust_decimal::Decimal;
 use rust_decimal_macros::dec;
 use serde::{Deserialize, Serialize};
 use voxi_core::{objects::value_json::json_to_str, ValueType};
@@ -62,82 +60,7 @@ impl<T: Object> FormObject<T> {
         }
     }
 
-    #[allow(unused_variables, clippy::too_many_arguments)]
-    pub fn input_bind(
-        &self,
-        cx: Scope,
-        value_type: ValueType,
-        field_name: String,
-        literal: String,
-        input_attributes: InputAttributes,
-    ) -> impl IntoView {
-        let content_signal = self.memo_content(cx, field_name.clone(), value_type);
-        let content_s = move || {
-            let content_signal = content_signal();
-            info!("content_signal: `{content_signal:?}`");
-            content_signal.0
-        };
-
-        let is_valid_signal = self.memo_valid(cx, field_name.clone());
-        let hint_signal = self.memo_hint(cx, field_name.clone());
-
-        let on_input = self.event_to_map(field_name, value_type);
-
-        let is_success_read = create_memo(cx, move |_| {
-            if is_valid_signal() {
-                ("is-success", "fa-check")
-            } else {
-                ("is-danger", "fa-exclamation-triangle")
-            }
-        });
-
-        let hint_bottom = create_memo(cx, move |_| {
-            hint_signal().map(|hint| {
-                let is_success = is_success_read().0;
-                view! {
-                    cx,
-                    <p class={format!("help {is_success}")}>{hint}</p>
-                }
-                .into_view(cx)
-            })
-        });
-
-        let inputmode = input_attributes.inputmode.map(|im| im.to_string());
-
-        let classes_div = move || {
-            format!(
-                "control has-icons-left has-icons-right {}",
-                is_success_read().0
-            )
-        };
-        let classes_input = move || format!("input {}", is_success_read().1);
-
-        let min = input_attributes.min.map(|n| n.to_string());
-        let max = input_attributes.max.map(|n| n.to_string());
-        let step = input_attributes.step.map(|n| n.to_string());
-
-        let input_type = input_attributes.input_type.to_string();
-
-        view! {
-            cx,
-            <div class="field">
-                <label class="label">{literal}</label>
-                <div class={classes_div}>
-                    <input class={classes_input} type={input_type}
-                        {readonly} {disabled} {required} placeholder={input_attributes.placeholder}
-                        inputmode={inputmode} {autofocus} {multiple} size={input_attributes.size} maxlength={input_attributes.maxlength}
-                        min={min} max={max} pattern={input_attributes.pattern} width={input_attributes.width} height={input_attributes.height} step={step}
-                        autocomplete={input_attributes.autocomplete}
-                        on:input=on_input
-                        prop:value=content_s
-                    />
-                </div>
-                { hint_bottom }
-            </div>
-        }
-    }
-
-    fn memo_content(
+    pub fn memo_content(
         &self,
         cx: Scope,
         field_name: String,
@@ -157,7 +80,7 @@ impl<T: Object> FormObject<T> {
         })
     }
 
-    fn memo_hint(&self, cx: Scope, field_name: String) -> Memo<Option<String>> {
+    pub fn memo_hint(&self, cx: Scope, field_name: String) -> Memo<Option<String>> {
         let read_signal = self.object_read_signal;
         create_memo(cx, move |_| {
             let json_map = read_signal();
@@ -165,7 +88,7 @@ impl<T: Object> FormObject<T> {
         })
     }
 
-    fn memo_valid(&self, cx: Scope, field_name: String) -> Memo<bool> {
+    pub fn memo_valid(&self, cx: Scope, field_name: String) -> Memo<bool> {
         let read_signal = self.object_read_signal;
         create_memo(cx, move |_| -> bool {
             let json_map = read_signal();
@@ -179,7 +102,7 @@ impl<T: Object> FormObject<T> {
         })
     }
 
-    fn event_to_map(&self, field_name: String, value_type: ValueType) -> impl Fn(Event) {
+    pub fn event_to_map(&self, field_name: String, value_type: ValueType) -> impl Fn(Event) {
         let read_signal = self.object_read_signal;
         let write_signal = self.object_writer_signal;
 
@@ -292,67 +215,4 @@ impl IntoInputValueType for InputBindType {
             }
         }
     }
-}
-
-#[component]
-pub fn InputBind<T, 'a>(
-    cx: Scope,
-    fo: &'a FormObject<T>,
-    #[prop(into)] input_type: String,
-    #[prop(into)] literal: String,
-    #[prop(into)] field_name: String,
-    #[prop(optional)] readonly: Option<bool>,
-    #[prop(optional)] disabled: Option<bool>,
-    #[prop(optional)] required: Option<bool>,
-    #[prop(into)]
-    #[prop(optional)]
-    placeholder: Option<String>,
-    #[prop(optional)] inputmode: Option<InputMode>,
-    #[prop(optional)] autofocus: Option<bool>,
-    #[prop(optional)] multiple: Option<bool>,
-    #[prop(optional)] size: Option<usize>,
-    #[prop(optional)] maxlength: Option<usize>,
-    #[prop(optional)] min: Option<Decimal>,
-    #[prop(optional)] max: Option<Decimal>,
-    #[prop(optional)] pattern: Option<String>,
-    #[prop(optional)] width: Option<usize>,
-    #[prop(optional)] height: Option<usize>,
-    #[prop(optional)] step: Option<Decimal>,
-    #[prop(optional)] autocomplete: Option<String>,
-) -> impl IntoView
-where
-    T: Object,
-{
-    let ibt: InputBindType = (&input_type[..]).try_into().unwrap();
-
-    let InputValueType(mut input_attributes, value_type) = ibt.into_input_value_type();
-    input_attributes.readonly = input_attributes.readonly.or(readonly);
-    input_attributes.disabled = input_attributes.disabled.or(disabled);
-    input_attributes.required = input_attributes.required.or(required);
-    input_attributes.placeholder = input_attributes.placeholder.or(placeholder);
-    input_attributes.inputmode = input_attributes.inputmode.or(inputmode);
-    input_attributes.autofocus = input_attributes.autofocus.or(autofocus);
-    input_attributes.multiple = input_attributes.multiple.or(multiple);
-    input_attributes.size = input_attributes.size.or(size);
-    input_attributes.maxlength = input_attributes.maxlength.or(maxlength);
-    input_attributes.min = input_attributes.min.or(min);
-    input_attributes.max = input_attributes.max.or(max);
-    input_attributes.pattern = input_attributes.pattern.or(pattern);
-    input_attributes.width = input_attributes.width.or(width);
-    input_attributes.height = input_attributes.height.or(height);
-    input_attributes.step = input_attributes.step.or(step);
-    input_attributes.autocomplete = input_attributes.autocomplete.or(autocomplete);
-
-    view! {
-        cx,
-        <>
-            {fo.input_bind(cx, value_type,field_name, literal, input_attributes)}
-        </>
-    }
-}
-
-pub fn test() {
-    let mut input_attributes = InputAttributes::default();
-
-    //input_attributes.readonly = input_attributes.readonly.or(readonly);
 }

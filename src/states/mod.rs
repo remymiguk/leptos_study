@@ -12,3 +12,4 @@ pub mod object_model;
 pub mod validator;
 pub mod password_validator;
 pub mod email_validator;
+pub mod input_bind;

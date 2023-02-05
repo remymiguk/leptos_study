@@ -1,3 +1,5 @@
+use crate::components::modal::Confirmation;
+use crate::states::input_bind::*;
 use crate::states::{form_object::*, object_model::ObjectModel};
 use chrono::NaiveDate;
 use leptos::*;
@@ -19,37 +21,26 @@ pub struct Object {
 #[component]
 pub fn Playground(cx: Scope) -> impl IntoView {
     let model = ObjectModel::new(cx, Object::default(), vec![]);
+    let (read_signal, write_signal) = model.signal();
+
     let fo = FormObject::new(model);
+
+    let confirm_clear = Confirmation::new(cx);
 
     view! {
         cx,
+        <div>{move ||format!("Object content: {:?}", read_signal())}</div>
         <InputBind fo=&fo input_type="text" literal="User name" field_name="user_name" placeholder="User name"/>
         <InputBind fo=&fo input_type="text" literal="E-mail" field_name="email" placeholder="User e-mail"/>
         <InputBind fo=&fo input_type="password" literal="Password" field_name="password" placeholder="User password"/>
-
         <InputBind fo=&fo input_type="i64" literal="Code i64" field_name="code_i64" placeholder="Code i64"/>
-
         <InputBind fo=&fo input_type="u64" literal="Code u64" field_name="code_u64" placeholder="Code u64"/>
-
         <InputBind fo=&fo input_type="date" literal="Date" field_name="date" placeholder="Date"/>
+        <InputBind fo=&fo input_type="checkbox" literal="checkbox" field_name="checkbox" placeholder="Checkbox"/>
 
-            // <h4>
-            //     {move || upsert_value}
-            // </h4>
-            // <br/><br/>
-            // <input type="button" value="Signal" class="button is-danger"
-            //     on:click=on_signal
-            // />
-            // <input type="button" value="Action" class="button is-danger"
-            //     on:click=on_action
-            // />
-    }
-}
-
-async fn switch(payload: String) -> String {
-    if payload == "..." {
-        String::from("xxx")
-    } else {
-        String::from("...")
+        {confirm_clear.component(cx, "Confirm clear?", move |_| write_signal.set(Object::default()))}
+        <input type="button" value="Clear" class="button is-danger"
+            on:click=confirm_clear.on_show()
+        />
     }
 }

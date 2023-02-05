@@ -19,6 +19,9 @@ Inclusive and easy access web development for everyone ^1.
 
 ^1 Sometime work with libraries in Rust is hard, commonly requires low-level knowledge or a genius mind to understand.
 
+Try achieve facilities to develop enterprise apps like was in teh 90's.
+Clipper, Visual Basic, Delphi
+
 # Leptos study project Axum
 
 It showcases Leptos' ability to create both a client-side rendered app, and a server side rendered app with hydration, in a single repository.
