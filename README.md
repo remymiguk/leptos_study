@@ -3,13 +3,6 @@
 Start product server:
 cargo run -- --addr '127.0.0.1:8080' --cors-allow-origin 'http://127.0.0.1:3000'
 
-- Components:
-
-- [ ] Checkbox
-- [ ] Select/combo
-- [ ] Text area
-- [ ] Label
-
 # Roxxies
 
 Web frameworks in Rust don't have goal to deal with common enterprise necessities.

@@ -31,7 +31,7 @@ pub fn Playground(cx: Scope) -> impl IntoView {
         cx,
         <div>{move ||format!("Object content: {:?}", read_signal())}</div>
         <InputBind fo=&fo input_type="text" literal="User name" field_name="user_name" placeholder="User name"/>
-        <InputBind fo=&fo input_type="text" literal="E-mail" field_name="email" placeholder="User e-mail"/>
+        <InputBind fo=&fo input_type="email" literal="E-mail" field_name="email" placeholder="User e-mail"/>
         <InputBind fo=&fo input_type="password" literal="Password" field_name="password" placeholder="User password"/>
         <InputBind fo=&fo input_type="i64" literal="Code i64" field_name="code_i64" placeholder="Code i64"/>
         <InputBind fo=&fo input_type="u64" literal="Code u64" field_name="code_u64" placeholder="Code u64"/>

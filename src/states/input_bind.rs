@@ -7,9 +7,6 @@ use crate::states::{
 use leptos::*;
 use log::info;
 use rust_decimal::Decimal;
-use voxi_core::ValueType;
-
-use super::input_attributes::InputAttributes;
 
 #[component]
 pub fn InputBind<T, 'a>(
@@ -60,23 +57,6 @@ where
     input_attributes.step = input_attributes.step.or(step);
     input_attributes.autocomplete = input_attributes.autocomplete.or(autocomplete);
 
-    view! {
-        cx,
-        <>
-            {input_bind(fo, cx, value_type,field_name, literal, input_attributes)}
-        </>
-    }
-}
-
-#[allow(unused_variables, clippy::too_many_arguments)]
-pub fn input_bind<'a, T: Object>(
-    fo: &'a FormObject<T>,
-    cx: Scope,
-    value_type: ValueType,
-    field_name: String,
-    literal: String,
-    input_attributes: InputAttributes,
-) -> impl IntoView {
     let content_signal = fo.memo_content(cx, field_name.clone(), value_type);
     let content_s = move || {
         let content_signal = content_signal();
@@ -141,10 +121,4 @@ pub fn input_bind<'a, T: Object>(
             { hint_bottom }
         </div>
     }
-}
-
-pub fn test() {
-    let mut input_attributes = InputAttributes::default();
-
-    //input_attributes.readonly = input_attributes.readonly.or(readonly);
 }
