@@ -58,4 +58,9 @@ impl InputAttributes {
         self.step = Some(value);
         self
     }
+
+    pub fn pattern(mut self, value: &str) -> Self {
+        self.pattern = Some(value.to_string());
+        self
+    }
 }

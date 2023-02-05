@@ -67,7 +67,7 @@ where
     let is_valid_signal = fo.memo_valid(cx, field_name.clone());
     let hint_signal = fo.memo_hint(cx, field_name.clone());
 
-    let on_input = fo.event_to_map(field_name, value_type);
+    let on_input = fo.on_input_to_map(field_name, value_type);
 
     let is_success_read = create_memo(cx, move |_| {
         if is_valid_signal() {
