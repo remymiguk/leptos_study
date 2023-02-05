@@ -1,4 +1,5 @@
 use super::{
+    input_attributes::InputAttributes,
     input_type::InputType,
     json_map::JsonMap,
     object_model::{ComponentMap, ObjectModel},
@@ -9,6 +10,7 @@ use crate::states::object::Object;
 use leptos::*;
 use log::info;
 use rust_decimal::Decimal;
+use rust_decimal_macros::dec;
 use serde::{Deserialize, Serialize};
 use voxi_core::{objects::value_json::json_to_str, ValueType};
 use web_sys::Event;
@@ -61,78 +63,13 @@ impl<T: Object> FormObject<T> {
     }
 
     #[allow(unused_variables, clippy::too_many_arguments)]
-    pub fn input_bind_text(
-        &self,
-        cx: Scope,
-        input_type: InputType,
-        literal: String,
-        field_name: String,
-        readonly: Option<bool>,
-        disabled: Option<bool>,
-        required: Option<bool>,
-        placeholder: Option<String>,
-        inputmode: Option<InputMode>,
-        autofocus: Option<bool>,
-        multiple: Option<bool>,
-        size: Option<usize>,
-        maxlength: Option<usize>,
-        min: Option<Decimal>,
-        max: Option<Decimal>,
-        pattern: Option<String>,
-        width: Option<usize>,
-        height: Option<usize>,
-        step: Option<Decimal>,
-        autocomplete: Option<String>,
-    ) -> impl IntoView {
-        self.input_bind(
-            cx,
-            input_type,
-            literal,
-            field_name,
-            ValueType::String,
-            readonly,
-            disabled,
-            required,
-            placeholder,
-            inputmode,
-            autofocus,
-            multiple,
-            size,
-            maxlength,
-            min,
-            max,
-            pattern,
-            width,
-            height,
-            step,
-            autocomplete,
-        )
-    }
-
-    #[allow(unused_variables, clippy::too_many_arguments)]
     pub fn input_bind(
         &self,
         cx: Scope,
-        input_type: InputType,
-        literal: String,
-        field_name: String,
         value_type: ValueType,
-        readonly: Option<bool>,
-        disabled: Option<bool>,
-        required: Option<bool>,
-        placeholder: Option<String>,
-        inputmode: Option<InputMode>,
-        autofocus: Option<bool>,
-        multiple: Option<bool>,
-        size: Option<usize>,
-        maxlength: Option<usize>,
-        min: Option<Decimal>,
-        max: Option<Decimal>,
-        pattern: Option<String>,
-        width: Option<usize>,
-        height: Option<usize>,
-        step: Option<Decimal>,
-        autocomplete: Option<String>,
+        field_name: String,
+        literal: String,
+        input_attributes: InputAttributes,
     ) -> impl IntoView {
         let content_signal = self.memo_content(cx, field_name.clone(), value_type);
         let content_s = move || {
@@ -165,7 +102,7 @@ impl<T: Object> FormObject<T> {
             })
         });
 
-        let inputmode = inputmode.map(|im| im.to_string());
+        let inputmode = input_attributes.inputmode.map(|im| im.to_string());
 
         let classes_div = move || {
             format!(
@@ -175,20 +112,22 @@ impl<T: Object> FormObject<T> {
         };
         let classes_input = move || format!("input {}", is_success_read().1);
 
-        let min = min.map(|n| n.to_string());
-        let max = max.map(|n| n.to_string());
-        let step = step.map(|n| n.to_string());
+        let min = input_attributes.min.map(|n| n.to_string());
+        let max = input_attributes.max.map(|n| n.to_string());
+        let step = input_attributes.step.map(|n| n.to_string());
+
+        let input_type = input_attributes.input_type.to_string();
 
         view! {
             cx,
             <div class="field">
                 <label class="label">{literal}</label>
                 <div class={classes_div}>
-                    <input class={classes_input} type={input_type.to_string()}
-                        {readonly} {disabled} {required} placeholder={placeholder}
-                        inputmode={inputmode} {autofocus} {multiple} size={size} maxlength={maxlength}
-                        min={min} max={max} pattern={pattern} width={width} height={height} step={step}
-                        autocomplete={autocomplete}
+                    <input class={classes_input} type={input_type}
+                        {readonly} {disabled} {required} placeholder={input_attributes.placeholder}
+                        inputmode={inputmode} {autofocus} {multiple} size={input_attributes.size} maxlength={input_attributes.maxlength}
+                        min={min} max={max} pattern={input_attributes.pattern} width={input_attributes.width} height={input_attributes.height} step={step}
+                        autocomplete={input_attributes.autocomplete}
                         on:input=on_input
                         prop:value=content_s
                     />
@@ -264,45 +203,7 @@ impl<T: Object> FormObject<T> {
     }
 }
 
-#[component]
-pub fn InputBindText<T, 'a>(
-    cx: Scope,
-    fo: &'a FormObject<T>,
-    #[prop(into)] literal: String,
-    #[prop(into)] field_name: String,
-    #[prop(optional)] readonly: Option<bool>,
-    #[prop(optional)] disabled: Option<bool>,
-    #[prop(optional)] required: Option<bool>,
-    #[prop(into)]
-    #[prop(optional)]
-    placeholder: Option<String>,
-    #[prop(optional)] inputmode: Option<InputMode>,
-    #[prop(optional)] autofocus: Option<bool>,
-    #[prop(optional)] multiple: Option<bool>,
-    #[prop(optional)] size: Option<usize>,
-    #[prop(optional)] maxlength: Option<usize>,
-    #[prop(optional)] min: Option<Decimal>,
-    #[prop(optional)] max: Option<Decimal>,
-    #[prop(optional)] pattern: Option<String>,
-    #[prop(optional)] width: Option<usize>,
-    #[prop(optional)] height: Option<usize>,
-    #[prop(optional)] step: Option<Decimal>,
-    #[prop(optional)] autocomplete: Option<String>,
-) -> impl IntoView
-where
-    T: Object,
-{
-    view! {
-        cx,
-        <>
-            {fo.input_bind(cx, InputType::Text, literal, field_name, ValueType::String, readonly, disabled, required, placeholder, inputmode,
-                autofocus, multiple, size, maxlength, min, max, pattern, width, height, step, autocomplete
-            )}
-        </>
-    }
-}
-
-pub struct InputValueType(pub InputType, pub ValueType);
+pub struct InputValueType(pub InputAttributes, pub ValueType);
 
 pub trait IntoInputValueType {
     fn into_input_value_type(self) -> InputValueType;
@@ -318,6 +219,7 @@ pub enum InputBindType {
     Uuid,
     Text,
     Password,
+    Email,
     Decimal,
     I64,
     U64,
@@ -335,6 +237,7 @@ impl TryFrom<&str> for InputBindType {
             "uuid" => InputBindType::Uuid,
             "text" => InputBindType::Text,
             "password" => InputBindType::Password,
+            "email" => InputBindType::Email,
             "decimal" => InputBindType::Decimal,
             "i64" => InputBindType::I64,
             "u64" => InputBindType::U64,
@@ -350,17 +253,43 @@ impl TryFrom<&str> for InputBindType {
 impl IntoInputValueType for InputBindType {
     fn into_input_value_type(self) -> InputValueType {
         match self {
-            InputBindType::Text => InputValueType(InputType::Text, ValueType::String),
-            InputBindType::Uuid => InputValueType(InputType::Text, ValueType::Uuid),
-            InputBindType::Password => InputValueType(InputType::Text, ValueType::String),
-            InputBindType::Decimal => InputValueType(InputType::Number, ValueType::Decimal),
-            InputBindType::I64 => InputValueType(InputType::Number, ValueType::Int64),
-            InputBindType::U64 => InputValueType(InputType::Number, ValueType::Int64),
-            InputBindType::Date => InputValueType(InputType::Date, ValueType::Date),
-            InputBindType::DateTime => {
-                InputValueType(InputType::DatetimeLocal, ValueType::DateTime)
+            InputBindType::Text => {
+                InputValueType(InputAttributes::new(InputType::Text), ValueType::String)
             }
-            InputBindType::Checkbox => InputValueType(InputType::Checkbox, ValueType::Boolean),
+            InputBindType::Uuid => {
+                InputValueType(InputAttributes::new(InputType::Text), ValueType::Uuid)
+            }
+            InputBindType::Password => {
+                InputValueType(InputAttributes::new(InputType::Password), ValueType::String)
+            }
+            InputBindType::Decimal => InputValueType(
+                InputAttributes::new(InputType::Number).step(dec!(0.01)),
+                ValueType::Decimal,
+            ),
+            InputBindType::I64 => InputValueType(
+                InputAttributes::new(InputType::Number).step(dec!(1)),
+                ValueType::Int64,
+            ),
+            InputBindType::U64 => InputValueType(
+                InputAttributes::new(InputType::Number)
+                    .step(dec!(1))
+                    .min(dec!(0)),
+                ValueType::Int64,
+            ),
+            InputBindType::Date => {
+                InputValueType(InputAttributes::new(InputType::Date), ValueType::Date)
+            }
+            InputBindType::DateTime => InputValueType(
+                InputAttributes::new(InputType::DatetimeLocal),
+                ValueType::DateTime,
+            ),
+            InputBindType::Checkbox => InputValueType(
+                InputAttributes::new(InputType::Checkbox),
+                ValueType::Boolean,
+            ),
+            InputBindType::Email => {
+                InputValueType(InputAttributes::new(InputType::Email), ValueType::String)
+            }
         }
     }
 }
@@ -396,13 +325,34 @@ where
 {
     let ibt: InputBindType = (&input_type[..]).try_into().unwrap();
 
-    let InputValueType(input_type, value_type) = ibt.into_input_value_type();
+    let InputValueType(mut input_attributes, value_type) = ibt.into_input_value_type();
+    input_attributes.readonly = input_attributes.readonly.or(readonly);
+    input_attributes.disabled = input_attributes.disabled.or(disabled);
+    input_attributes.required = input_attributes.required.or(required);
+    input_attributes.placeholder = input_attributes.placeholder.or(placeholder);
+    input_attributes.inputmode = input_attributes.inputmode.or(inputmode);
+    input_attributes.autofocus = input_attributes.autofocus.or(autofocus);
+    input_attributes.multiple = input_attributes.multiple.or(multiple);
+    input_attributes.size = input_attributes.size.or(size);
+    input_attributes.maxlength = input_attributes.maxlength.or(maxlength);
+    input_attributes.min = input_attributes.min.or(min);
+    input_attributes.max = input_attributes.max.or(max);
+    input_attributes.pattern = input_attributes.pattern.or(pattern);
+    input_attributes.width = input_attributes.width.or(width);
+    input_attributes.height = input_attributes.height.or(height);
+    input_attributes.step = input_attributes.step.or(step);
+    input_attributes.autocomplete = input_attributes.autocomplete.or(autocomplete);
+
     view! {
         cx,
         <>
-            {fo.input_bind(cx, input_type, literal, field_name, value_type, readonly, disabled, required, placeholder, inputmode,
-                autofocus, multiple, size, maxlength, min, max, pattern, width, height, step, autocomplete
-            )}
+            {fo.input_bind(cx, value_type,field_name, literal, input_attributes)}
         </>
     }
+}
+
+pub fn test() {
+    let mut input_attributes = InputAttributes::default();
+
+    //input_attributes.readonly = input_attributes.readonly.or(readonly);
 }

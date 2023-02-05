@@ -9,40 +9,53 @@ use super::input_mode::InputMode;
 #[builder(setter(strip_option))]
 #[builder(default)]
 pub struct InputAttributes {
-    pub name: String,
-    pub i_type: InputType,
+    pub input_type: InputType,
     pub placeholder: Option<String>,
-    pub input_mode: Option<InputMode>,
-    pub readonly: bool,
-    pub disabled: bool,
+    pub inputmode: Option<InputMode>,
+    pub readonly: Option<bool>,
+    pub disabled: Option<bool>,
     // The size attribute works with the following input types: text, search, tel, url, email, and password.
-    pub size: Option<u16>,
-    pub maxlength: Option<u16>,
+    pub size: Option<usize>,
+    pub maxlength: Option<usize>,
     // The multiple attribute works with the following input types: email, and file.
-    pub multiple: bool,
+    pub multiple: Option<bool>,
     pub min: Option<Decimal>,
     pub max: Option<Decimal>,
     pub pattern: Option<String>,
-    pub required: bool,
-    pub autofocus: bool,
+    pub required: Option<bool>,
+    pub autofocus: Option<bool>,
     // The input height and width attributes specify the height and width of an <input type="image"> element
-    pub width: Option<u16>,
-    pub height: Option<u16>,
+    pub width: Option<usize>,
+    pub height: Option<usize>,
     pub datalist: Option<Vec<String>>,
     pub autocomplete: Option<String>,
     pub step: Option<Decimal>,
 }
 
 impl InputAttributes {
-    pub fn new(name: &str, i_type: InputType) -> Self {
+    pub fn new(i_type: InputType) -> Self {
         Self {
-            name: name.into(),
-            i_type,
+            input_type: i_type,
             ..Default::default()
         }
     }
 
     pub fn builder() -> InputAttributesBuilder {
         InputAttributesBuilder::default()
+    }
+
+    pub fn min(mut self, value: Decimal) -> Self {
+        self.min = Some(value);
+        self
+    }
+
+    pub fn max(mut self, value: Decimal) -> Self {
+        self.max = Some(value);
+        self
+    }
+
+    pub fn step(mut self, value: Decimal) -> Self {
+        self.step = Some(value);
+        self
     }
 }

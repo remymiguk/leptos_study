@@ -3,28 +3,21 @@
 Start product server:
 cargo run -- --addr '127.0.0.1:8080' --cors-allow-origin 'http://127.0.0.1:3000'
 
-- Problem:
+- Components:
 
-- [ ] Create action playground
-
-- [ ] The mutable operation Insert/update/delete each should be action
-      in the dispatch should pass the record payload
-
-- [ ] The read operation (list and count) should use create_resources using version of actions
-
-- [ ] Question:
-      How get the result, if it works successfully ???
-      Maybe I should have a signal
-      Appears that should read the signal from value(), but should certify what is returns in the first moment
-
-- [ ] Maybe to create a Table/Grid model, to manage pagination, count, crud, etc.
-
-==
+- [ ] Checkbox
+- [ ] Select/combo
+- [ ] Text area
+- [ ] Label
 
 # Roxxies
 
 Web frameworks in Rust don't have goal to deal with common enterprise necessities.
 Per example, have a reusable columnar data model, bind data model into visual componentes.
+
+Inclusive and easy access web development for everyone ^1.
+
+^1 Sometime work with libraries in Rust is hard, commonly requires low-level knowledge or a genius mind to understand.
 
 # Leptos study project Axum
 
