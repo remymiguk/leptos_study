@@ -208,7 +208,9 @@ impl IntoInputValueType for InputBindType {
                 InputValueType(InputAttributes::new(InputType::Password), ValueType::String)
             }
             InputBindType::Decimal => InputValueType(
-                InputAttributes::new(InputType::Number).step(dec!(0.01)),
+                InputAttributes::new(InputType::Number)
+                    .step(dec!(0.01))
+                    .pattern(r"^\d+(?:\.\d{1,2})?$"),
                 ValueType::Decimal,
             ),
             InputBindType::I64 => InputValueType(

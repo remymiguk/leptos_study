@@ -4,6 +4,7 @@ use crate::states::input_bind::*;
 use crate::states::{form_object::*, object_model::ObjectModel};
 use chrono::NaiveDate;
 use leptos::*;
+use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 
 #[derive(Default, Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
@@ -13,6 +14,7 @@ pub struct Object {
     password: Option<String>,
     code_i64: Option<i64>,
     code_u64: Option<u64>,
+    price: Option<Decimal>,
     date: Option<NaiveDate>,
     checkbox: Option<bool>,
     select: Option<i32>,
@@ -36,6 +38,7 @@ pub fn Playground(cx: Scope) -> impl IntoView {
         <InputBind fo=&fo input_type="password" literal="Password" field_name="password" placeholder="User password"/>
         <InputBind fo=&fo input_type="i64" literal="Code i64" field_name="code_i64" placeholder="Code i64"/>
         <InputBind fo=&fo input_type="u64" literal="Code u64" field_name="code_u64" placeholder="Code u64"/>
+        <InputBind fo=&fo input_type="decimal" literal="Price" field_name="price" placeholder="Price"/>
         <InputBind fo=&fo input_type="date" literal="Date" field_name="date" placeholder="Date"/>
 
         <CheckboxBind fo=&fo literal="Checkbox" field_name="checkbox"/>
