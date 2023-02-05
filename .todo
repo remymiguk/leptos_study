@@ -5,3 +5,5 @@
 ☐ Text area
 ☐ Label
 ☐ Validator "block" user content (try with truncate)
+☐ Create button Ok/Cancel with confirmation message
+    ☐ <ButtonBind text="Ok" confirmation={Confirmation::new(cx, nmove||xxx)}>
