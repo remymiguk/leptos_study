@@ -15,8 +15,30 @@ where
 {
     let onchange = fo.on_change_to_map(field_name.clone(), ValueType::Boolean);
 
-    let value = fo.memo_content(cx, field_name, ValueType::Boolean);
+    let value = fo.memo_content(cx, field_name.clone(), ValueType::Boolean);
     let checked = move || value().0 == "true";
+
+    let is_valid_signal = fo.memo_valid(cx, field_name.clone());
+    let hint_signal = fo.memo_hint(cx, field_name.clone());
+
+    let is_success_read = create_memo(cx, move |_| {
+        if is_valid_signal() {
+            ("is-success", "fa-check")
+        } else {
+            ("is-danger", "fa-exclamation-triangle")
+        }
+    });
+
+    let hint_bottom = create_memo(cx, move |_| {
+        hint_signal().map(|hint| {
+            let is_success = is_success_read().0;
+            view! {
+                cx,
+                <p class={format!("help {is_success}")}>{hint}</p>
+            }
+            .into_view(cx)
+        })
+    });
 
     let checkbox = view! {
         cx,
@@ -34,7 +56,7 @@ where
                 // { icon_left }
                 // { icon_right }
             </div>
-            // { hint_bottom }
+            { hint_bottom }
         </div>
 
     }

@@ -4,6 +4,7 @@ use crate::states::input_bind::*;
 use crate::states::{form_object::*, object_model::ObjectModel};
 use chrono::NaiveDate;
 use leptos::*;
+use log::info;
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 
@@ -26,6 +27,24 @@ pub fn Playground(cx: Scope) -> impl IntoView {
     let model = ObjectModel::new(cx, Object::default(), vec![]);
     let (read_signal, write_signal) = model.signal();
 
+    let input_ref = NodeRef::<HtmlElement<Input>>::new(cx);
+    let (_value_read, value_write) = create_signal(cx, String::new());
+
+    let input = move |e| {
+        info!("inside");
+        let mut value_s = event_target_value(&e);
+        if value_s.len() > 2 {
+            value_s = value_s[0..2].to_string();
+        }
+        input_ref
+            .get()
+            .expect("input element to exist")
+            .set_value(&value_s);
+
+        info!("value_s: {value_s}");
+        value_write.set(value_s);
+    };
+
     let fo = FormObject::new(model);
 
     let confirm_clear = Confirmation::new(cx);
@@ -33,6 +52,8 @@ pub fn Playground(cx: Scope) -> impl IntoView {
     view! {
         cx,
         <div>{move ||format!("Object content: {:?}", read_signal())}</div>
+        <input type="text" on:input=input _ref={input_ref}/> // prop:value={value_read}
+
         <InputBind fo=&fo input_type="text" literal="User name" field_name="user_name" placeholder="User name"/>
         <InputBind fo=&fo input_type="email" literal="E-mail" field_name="email" placeholder="User e-mail"/>
         <InputBind fo=&fo input_type="password" literal="Password" field_name="password" placeholder="User password"/>

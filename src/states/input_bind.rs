@@ -8,6 +8,20 @@ use leptos::*;
 use log::info;
 use rust_decimal::Decimal;
 
+pub trait InputValidator {
+    fn value(&self, input: String) -> String;
+}
+
+pub struct InputClosure {
+    callback: Box<dyn Fn(String) -> String>,
+}
+
+impl InputValidator for InputClosure {
+    fn value(&self, input: String) -> String {
+        (self.callback)(input)
+    }
+}
+
 #[component]
 pub fn InputBind<T, 'a>(
     cx: Scope,
@@ -57,11 +71,18 @@ where
     input_attributes.step = input_attributes.step.or(step);
     input_attributes.autocomplete = input_attributes.autocomplete.or(autocomplete);
 
+    let input_ref = NodeRef::<HtmlElement<Input>>::new(cx);
+
     let content_signal = fo.memo_content(cx, field_name.clone(), value_type);
     let content_s = move || {
         let content_signal = content_signal();
         info!("content_signal: `{content_signal:?}`");
-        content_signal.0
+        let value_s = content_signal.0;
+        input_ref
+            .get()
+            .expect("input element to exist")
+            .set_value(&value_s);
+        value_s
     };
 
     let is_valid_signal = fo.memo_valid(cx, field_name.clone());
@@ -110,6 +131,7 @@ where
             <label class="label">{literal}</label>
             <div class={classes_div}>
                 <input class={classes_input} type={input_type}
+                    _ref={input_ref}
                     {readonly} {disabled} {required} placeholder={input_attributes.placeholder}
                     inputmode={inputmode} {autofocus} {multiple} size={input_attributes.size} maxlength={input_attributes.maxlength}
                     min={min} max={max} pattern={input_attributes.pattern} width={input_attributes.width} height={input_attributes.height} step={step}
@@ -122,3 +144,4 @@ where
         </div>
     }
 }
+
