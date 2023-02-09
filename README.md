@@ -5,6 +5,20 @@ cargo run -- --addr '127.0.0.1:8080' --cors-allow-origin 'http://127.0.0.1:3000'
 
 # Roxxies
 
+An inclusive fullstack framework for the masses
+
+Inspired in the easily development enterprise desktop apps from the 90's.
+
+Roxxies / Nineties ?
+
+- No complex coupling
+- Simplicity
+- Fields binds
+- Data model
+- Component
+
+https://www.redbubble.com/i/poster/I-Love-The-90s-Retro-Nineties-Pop-Culture-Throwback-by-zenspired/27813876.LVTDI
+
 Web frameworks in Rust don't have goal to deal with common enterprise necessities.
 Per example, have a reusable columnar data model, bind data model into visual componentes.
 

@@ -19,7 +19,7 @@ where
     let checked = move || value().0 == "true";
 
     let is_valid_signal = fo.memo_valid(cx, field_name.clone());
-    let hint_signal = fo.memo_hint(cx, field_name.clone());
+    let hint_signal = fo.memo_hint(cx, field_name);
 
     let is_success_read = create_memo(cx, move |_| {
         if is_valid_signal() {

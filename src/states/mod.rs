@@ -17,3 +17,4 @@ pub mod checkbox_bind;
 pub mod input_bind_type;
 pub mod input_value_type;
 pub mod input_validator;
+pub mod select_bind;

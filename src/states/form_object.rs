@@ -8,7 +8,7 @@ use crate::states::object::Object;
 use leptos::*;
 use log::info;
 use serde::{Deserialize, Serialize};
-use voxi_core::{objects::value_json::json_to_str, ValueType};
+use voxi_core::{json_to_value, Value, ValueType};
 use web_sys::Event;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq, Eq)]
@@ -63,17 +63,21 @@ impl<T: Object> FormObject<T> {
         cx: Scope,
         field_name: String,
         value_type: ValueType,
-    ) -> Memo<(String, JsonMap<T>)> {
+    ) -> Memo<(String, Option<Value>, JsonMap<T>)> {
         let read_signal = self.object_read_signal;
         create_memo(cx, move |_| {
             let json_map = read_signal();
             let user_json = json_map.0;
             let value_j = json_map.1.map().get(&field_name).unwrap().value.clone();
-            let value_s = json_to_str(value_j, value_type);
+
+            let value_opt = json_to_value(value_j, value_type).unwrap().into_opt();
+            let value_s = value_opt.clone().map(|v| v.to_string()).unwrap_or_default();
+
+            // let value_s = json_to_str(value_j, value_type);
             info!(
                 "inside memo content: `{field_name}` value: `{value_s}` user_json: `{user_json:?}`"
             );
-            (value_s, user_json)
+            (value_s, value_opt, user_json)
         })
     }
 

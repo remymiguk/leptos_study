@@ -1,10 +1,10 @@
 use crate::components::modal::Confirmation;
 use crate::states::checkbox_bind::*;
 use crate::states::input_bind::*;
+use crate::states::select_bind::*;
 use crate::states::{form_object::*, object_model::ObjectModel};
 use chrono::NaiveDate;
 use leptos::*;
-use log::info;
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 
@@ -31,6 +31,7 @@ pub fn Playground(cx: Scope) -> impl IntoView {
 
     let confirm_clear = Confirmation::new(cx);
 
+    let options = vec![(1, "English"), (2, "Spanish"), (3, "Portuguese")].into_select_options();
     view! {
         cx,
         <div>{move ||format!("Object content: {:?}", read_signal())}</div>
@@ -44,6 +45,8 @@ pub fn Playground(cx: Scope) -> impl IntoView {
         <InputBind fo=&fo input_type="date" literal="Date" field_name="date" placeholder="Date"/>
 
         <CheckboxBind fo=&fo literal="Checkbox" field_name="checkbox"/>
+
+        <SelectBind fo=&fo literal="Select" field_name="select" options={options}/>
 
         {confirm_clear.component(cx, "Confirm clear?", move |_| write_signal.set(Object::default()))}
         <input type="button" value="Clear" class="button is-danger"
