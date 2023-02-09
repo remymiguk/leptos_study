@@ -1,7 +1,7 @@
 
 // block decimal value
 // https://stackoverflow.com/questions/34057595/allow-2-decimal-places-in-input-type-number
-☐ Block user typing decimal
+✔ Block user typing decimal @done(23-02-09 00:51)
 
 ☐ Icon in Inputs
 - Components:
@@ -12,3 +12,5 @@
 ☐ Validator "block" user content (try with truncate)
 ☐ Create button Ok/Cancel with confirmation message
     ☐ <ButtonBind text="Ok" confirmation={Confirmation::new(cx, nmove||xxx)}>
+☐ Change caret position
+    https://stackoverflow.com/questions/512528/set-keyboard-caret-position-in-html-textbox

@@ -126,6 +126,7 @@ impl<T: Object> FormObject<T> {
         &self,
         field_name: String,
         value_type: ValueType,
+        input_ref: NodeRef<HtmlElement<Input>>,
         validator: Option<Box<dyn InputValidator>>,
     ) -> impl Fn(Event) {
         let read_signal = self.object_read_signal;
@@ -142,7 +143,10 @@ impl<T: Object> FormObject<T> {
                 if let Some(validator) = validator.clone() {
                     value_s = validator.value(value_s.clone(), value_s.clone());
                 }
-                // TODO: @@@ I should use InputValidator HEre!
+
+                if let Some(input_ref) = input_ref.get() {
+                    input_ref.set_value(&value_s);
+                }
                 Some(value_s)
             };
             form_map
