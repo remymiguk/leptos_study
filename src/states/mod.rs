@@ -14,3 +14,6 @@ pub mod password_validator;
 pub mod email_validator;
 pub mod input_bind;
 pub mod checkbox_bind;
+pub mod input_bind_type;
+pub mod input_value_type;
+pub mod input_validator;

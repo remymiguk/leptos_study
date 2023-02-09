@@ -1,26 +1,20 @@
-use crate::states::form_object::IntoInputValueType;
+use crate::states::input_bind_type::InputBindType;
+use crate::states::input_value_type::{InputValueType, IntoInputValueType};
 use crate::states::object::Object;
-use crate::states::{
-    form_object::{FormObject, InputBindType, InputValueType},
-    input_mode::InputMode,
-};
+use crate::states::{form_object::FormObject, input_mode::InputMode};
 use leptos::*;
 use log::info;
 use rust_decimal::Decimal;
 
-pub trait InputValidator {
-    fn value(&self, input: String) -> String;
-}
+// pub struct InputClosure {
+//     callback: Box<dyn Fn(String) -> String>,
+// }
 
-pub struct InputClosure {
-    callback: Box<dyn Fn(String) -> String>,
-}
-
-impl InputValidator for InputClosure {
-    fn value(&self, input: String) -> String {
-        (self.callback)(input)
-    }
-}
+// impl InputValidator for InputClosure {
+//     fn value(&self, input: String) -> String {
+//         (self.callback)(input)
+//     }
+// }
 
 #[component]
 pub fn InputBind<T, 'a>(
@@ -70,6 +64,7 @@ where
     input_attributes.height = input_attributes.height.or(height);
     input_attributes.step = input_attributes.step.or(step);
     input_attributes.autocomplete = input_attributes.autocomplete.or(autocomplete);
+    let validator = input_attributes.validator.clone();
 
     let input_ref = NodeRef::<HtmlElement<Input>>::new(cx);
 
@@ -88,7 +83,7 @@ where
     let is_valid_signal = fo.memo_valid(cx, field_name.clone());
     let hint_signal = fo.memo_hint(cx, field_name.clone());
 
-    let on_input = fo.on_input_to_map(field_name, value_type);
+    let on_input = fo.on_input_to_map(field_name, value_type, validator);
 
     let is_success_read = create_memo(cx, move |_| {
         if is_valid_signal() {
@@ -144,4 +139,3 @@ where
         </div>
     }
 }
-

@@ -1,6 +1,5 @@
 use super::{
-    input_attributes::InputAttributes,
-    input_type::InputType,
+    input_validator::InputValidator,
     json_map::JsonMap,
     object_model::{ComponentMap, ObjectModel},
     validator::ValidatorProvider,
@@ -8,7 +7,6 @@ use super::{
 use crate::states::object::Object;
 use leptos::*;
 use log::info;
-use rust_decimal_macros::dec;
 use serde::{Deserialize, Serialize};
 use voxi_core::{objects::value_json::json_to_str, ValueType};
 use web_sys::Event;
@@ -71,7 +69,6 @@ impl<T: Object> FormObject<T> {
             let json_map = read_signal();
             let user_json = json_map.0;
             let value_j = json_map.1.map().get(&field_name).unwrap().value.clone();
-
             let value_s = json_to_str(value_j, value_type);
             info!(
                 "inside memo content: `{field_name}` value: `{value_s}` user_json: `{user_json:?}`"
@@ -125,18 +122,27 @@ impl<T: Object> FormObject<T> {
         }
     }
 
-    pub fn on_input_to_map(&self, field_name: String, value_type: ValueType) -> impl Fn(Event) {
+    pub fn on_input_to_map(
+        &self,
+        field_name: String,
+        value_type: ValueType,
+        validator: Option<Box<dyn InputValidator>>,
+    ) -> impl Fn(Event) {
         let read_signal = self.object_read_signal;
         let write_signal = self.object_writer_signal;
 
         move |e: Event| {
             info!("*** inside event_to_map {} {:?}", field_name, value_type);
-            let value_s = event_target_value(&e);
+            let mut value_s = event_target_value(&e);
             let mut form_map = JsonMap::new(read_signal.get().1.object());
 
             let value_s = if value_s.is_empty() {
                 None
             } else {
+                if let Some(validator) = validator.clone() {
+                    value_s = validator.value(value_s.clone(), value_s.clone());
+                }
+                // TODO: @@@ I should use InputValidator HEre!
                 Some(value_s)
             };
             form_map
@@ -146,97 +152,6 @@ impl<T: Object> FormObject<T> {
 
             info!("*** firing {object:?}");
             write_signal.set(object);
-        }
-    }
-}
-
-pub struct InputValueType(pub InputAttributes, pub ValueType);
-
-pub trait IntoInputValueType {
-    fn into_input_value_type(self) -> InputValueType;
-}
-
-impl IntoInputValueType for InputValueType {
-    fn into_input_value_type(self) -> InputValueType {
-        self
-    }
-}
-
-pub enum InputBindType {
-    Uuid,
-    Text,
-    Password,
-    Email,
-    Decimal,
-    I64,
-    U64,
-    Date,
-    DateTime,
-}
-
-impl TryFrom<&str> for InputBindType {
-    type Error = String;
-
-    fn try_from(value: &str) -> Result<Self, Self::Error> {
-        let value = value.to_lowercase();
-        let ib_type = match &value[..] {
-            "uuid" => InputBindType::Uuid,
-            "text" => InputBindType::Text,
-            "password" => InputBindType::Password,
-            "email" => InputBindType::Email,
-            "decimal" => InputBindType::Decimal,
-            "i64" => InputBindType::I64,
-            "u64" => InputBindType::U64,
-            "date" => InputBindType::Date,
-            "datetime" => InputBindType::DateTime,
-            s => return Err(format!("undefined input bind type `{s}`")),
-        };
-        Ok(ib_type)
-    }
-}
-
-impl IntoInputValueType for InputBindType {
-    fn into_input_value_type(self) -> InputValueType {
-        match self {
-            InputBindType::Text => {
-                InputValueType(InputAttributes::new(InputType::Text), ValueType::String)
-            }
-            InputBindType::Uuid => {
-                InputValueType(InputAttributes::new(InputType::Text), ValueType::Uuid)
-            }
-            InputBindType::Password => {
-                InputValueType(InputAttributes::new(InputType::Password), ValueType::String)
-            }
-            InputBindType::Decimal => InputValueType(
-                InputAttributes::new(InputType::Number)
-                    .step(dec!(0.01))
-                    .pattern(r"^\d+(?:\.\d{1,2})?$"),
-                ValueType::Decimal,
-            ),
-            InputBindType::I64 => InputValueType(
-                InputAttributes::new(InputType::Number).step(dec!(1)),
-                ValueType::Int64,
-            ),
-            InputBindType::U64 => InputValueType(
-                InputAttributes::new(InputType::Number)
-                    .step(dec!(1))
-                    .min(dec!(0)),
-                ValueType::Int64,
-            ),
-            InputBindType::Date => {
-                InputValueType(InputAttributes::new(InputType::Date), ValueType::Date)
-            }
-            InputBindType::DateTime => InputValueType(
-                InputAttributes::new(InputType::DatetimeLocal),
-                ValueType::DateTime,
-            ),
-            // InputBindType::Checkbox => InputValueType(
-            //     InputAttributes::new(InputType::Checkbox),
-            //     ValueType::Boolean,
-            // ),
-            InputBindType::Email => {
-                InputValueType(InputAttributes::new(InputType::Email), ValueType::String)
-            }
         }
     }
 }

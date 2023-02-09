@@ -2,10 +2,10 @@ use crate::states::input_type::InputType;
 use derive_builder::Builder;
 use rust_decimal::Decimal;
 
-use super::input_mode::InputMode;
+use super::{input_mode::InputMode, input_validator::InputValidator};
 
 /// https://www.w3schools.com/html/html_form_attributes.asp
-#[derive(Builder, Default, Debug, Clone, PartialEq, Eq)]
+#[derive(Builder, Default, Debug, Clone)] //, PartialEq, Eq
 #[builder(setter(strip_option))]
 #[builder(default)]
 pub struct InputAttributes {
@@ -30,6 +30,7 @@ pub struct InputAttributes {
     pub datalist: Option<Vec<String>>,
     pub autocomplete: Option<String>,
     pub step: Option<Decimal>,
+    pub validator: Option<Box<dyn InputValidator + 'static>>,
 }
 
 impl InputAttributes {
@@ -56,6 +57,11 @@ impl InputAttributes {
 
     pub fn step(mut self, value: Decimal) -> Self {
         self.step = Some(value);
+        self
+    }
+
+    pub fn validator(mut self, value: impl InputValidator + 'static) -> Self {
+        self.validator = Some(Box::new(value));
         self
     }
 

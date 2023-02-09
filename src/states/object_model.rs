@@ -10,10 +10,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::json;
 use std::collections::HashMap;
 use voxi_core::{
-    objects::value_json::{
-        fields_names_from_object, get_field_to_str, json_to_map, modified_fields_name,
-        value_from_object,
-    },
+    objects::value_json::{get_field_to_str, modified_fields_name},
     ValueType,
 };
 
@@ -179,7 +176,7 @@ impl<T: Object> ObjectModel<T> {
         //
         //
 
-        let default_json_map = JsonMap::new(object.clone());
+        let default_json_map = JsonMap::new(object);
         // Intercept public change and extract the changed fields (diff)
         let diff_json_reader = {
             let default_json_map = default_json_map.clone();
@@ -190,7 +187,7 @@ impl<T: Object> ObjectModel<T> {
                 // Try get previous object values
                 let json_old = match previous_diff {
                     Some(json_diff) => json_diff.json_map.clone(),
-                    None => default_json_map.clone().into(),
+                    None => default_json_map.clone(),
                 };
                 // Generate diff with the changes
                 let diffs = modified_fields_name(json_old, json_new.clone());
@@ -226,7 +223,7 @@ impl<T: Object> ObjectModel<T> {
                 };
 
                 // Update whole previous component map with new states
-                let mut full_map = previous.clone().1.into_map();
+                let mut full_map = previous.1.into_map();
                 for (field_name, component_data) in component_map.into_map() {
                     full_map.insert(field_name.clone(), component_data.clone());
                 }

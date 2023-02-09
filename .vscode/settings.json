@@ -1,8 +1,8 @@
 {
-    "rust-analyzer.cargo.features": [
-        "ssr",
-        "hydrate"
-    ],
+    // "rust-analyzer.cargo.features": [
+    //     "ssr",
+    //     "hydrate"
+    // ],
     "rust-analyzer.check.targets": [
         "wasm32-unknown-unknown",
         "x86_64-unknown-linux-gnu",
