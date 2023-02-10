@@ -13,7 +13,7 @@ pub fn CheckboxBind<T, 'a>(
 where
     T: Object,
 {
-    let onchange = fo.on_change_to_map(field_name.clone(), ValueType::Boolean);
+    let onchange = fo.on_change_checked_to_map(field_name.clone(), ValueType::Boolean);
 
     let value = fo.memo_content(cx, field_name.clone(), ValueType::Boolean);
     let checked = move || value().0 == "true";

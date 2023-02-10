@@ -103,11 +103,15 @@ impl<T: Object> FormObject<T> {
         })
     }
 
-    pub fn on_change_to_map(&self, field_name: String, value_type: ValueType) -> impl Fn(Event) {
+    pub fn on_change_checked_to_map(
+        &self,
+        field_name: String,
+        value_type: ValueType,
+    ) -> impl Fn(Event) {
         let read_signal = self.object_read_signal;
         let write_signal = self.object_writer_signal;
         move |e: Event| {
-            info!("*** inside event_to_map {} {:?}", field_name, value_type);
+            info!("*** inside on_change_to_map {field_name} {value_type}");
             let value_s = event_target_checked(&e).to_string();
             let mut form_map = JsonMap::new(read_signal.get().1.object());
 
@@ -116,6 +120,39 @@ impl<T: Object> FormObject<T> {
             } else {
                 Some(value_s)
             };
+
+            info!("*** inside on_change_to_map {field_name} {value_type} new value_s {value_s:?}",);
+
+            form_map
+                .set_value_str(&field_name, value_s, value_type)
+                .unwrap();
+            let object: T = form_map.get();
+
+            info!("*** firing {object:?}");
+            write_signal.set(object);
+        }
+    }
+
+    pub fn on_change_value_to_map(
+        &self,
+        field_name: String,
+        value_type: ValueType,
+    ) -> impl Fn(Event) {
+        let read_signal = self.object_read_signal;
+        let write_signal = self.object_writer_signal;
+        move |e: Event| {
+            info!("*** inside on_change_to_map {field_name} {value_type}");
+            let value_s = event_target_value(&e).to_string();
+            let mut form_map = JsonMap::new(read_signal.get().1.object());
+
+            let value_s = if value_s.is_empty() {
+                None
+            } else {
+                Some(value_s)
+            };
+
+            info!("*** inside on_change_to_map {field_name} {value_type} new value_s {value_s:?}",);
+
             form_map
                 .set_value_str(&field_name, value_s, value_type)
                 .unwrap();
@@ -137,7 +174,7 @@ impl<T: Object> FormObject<T> {
         let write_signal = self.object_writer_signal;
 
         move |e: Event| {
-            info!("*** inside event_to_map {} {:?}", field_name, value_type);
+            info!("*** inside on_input_to_map {} {:?}", field_name, value_type);
             let mut value_s = event_target_value(&e);
             let mut form_map = JsonMap::new(read_signal.get().1.object());
 

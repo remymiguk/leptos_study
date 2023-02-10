@@ -68,12 +68,10 @@ where
         .into_value()
         .value_type();
 
-    let onchange = fo.on_change_to_map(field_name.clone(), value_type);
+    let onchange = fo.on_change_value_to_map(field_name.clone(), value_type);
 
     let current_value = fo.memo_content(cx, field_name.clone(), value_type)().1;
     let current_value_s = current_value.map(|v| v.to_string()).unwrap_or_default();
-
-    // let checked = move || value().0 == "true";
 
     let is_valid_signal = fo.memo_valid(cx, field_name.clone());
     let hint_signal = fo.memo_hint(cx, field_name);

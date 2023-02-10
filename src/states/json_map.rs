@@ -4,7 +4,7 @@ use serde_json::{json, Map};
 use std::marker::PhantomData;
 use voxi_core::{
     objects::value_json::{get_field_to_str, set_field_from_str},
-    ValueType,
+    CoreError, ValueType,
 };
 
 #[derive(Default, Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -31,12 +31,14 @@ impl<T: Object> JsonMap<T> {
         }
     }
 
-    pub fn try_from(object: T) -> Result<Self, serde_json::Error> {
-        Ok(Self::new(serde_json::to_value(&object)?))
+    pub fn try_from(object: T) -> Result<Self, CoreError> {
+        let value = serde_json::to_value(&object)?;
+        Ok(Self::new(value))
     }
 
-    pub fn try_get(&self) -> Result<T, serde_json::Error> {
-        serde_json::from_value(self.object.clone())
+    pub fn try_get(&self) -> Result<T, CoreError> {
+        let object = serde_json::from_value(self.object.clone())?;
+        Ok(object)
     }
 
     pub fn get(&self) -> T {
@@ -47,7 +49,7 @@ impl<T: Object> JsonMap<T> {
         &self,
         field_name: &str,
         value_type: ValueType,
-    ) -> Result<Option<String>, serde_json::Error> {
+    ) -> Result<Option<String>, CoreError> {
         let value = get_field_to_str(&self.object, field_name, value_type);
         Ok(value)
     }
@@ -57,8 +59,8 @@ impl<T: Object> JsonMap<T> {
         field_name: &str,
         value_s: Option<String>,
         value_type: ValueType,
-    ) -> Result<(), serde_json::Error> {
-        self.object = set_field_from_str(&self.object, field_name, value_s, value_type);
+    ) -> Result<(), CoreError> {
+        self.object = set_field_from_str(&self.object, field_name, value_s, value_type)?;
         Ok(())
     }
 
