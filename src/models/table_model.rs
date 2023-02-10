@@ -59,7 +59,7 @@ impl<T: std::fmt::Debug + Clone + Send + Sync + PartialEq + 'static> TableModel<
         );
 
         // @@@ add loading, error result
-        let update_read = {
+        let _update_read = {
             let repo = repository.clone();
             create_local_resource(cx, update_read, move |payload| {
                 let repo = repo.clone();

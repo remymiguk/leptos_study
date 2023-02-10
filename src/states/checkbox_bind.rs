@@ -43,7 +43,7 @@ where
     let checkbox = view! {
         cx,
         <label class="checkbox">
-            <input type="checkbox" on:change={onchange} checked={checked}/>
+            <input type="checkbox" on:change=onchange checked=checked/>
             { " " }{ literal }
         </label>
     };

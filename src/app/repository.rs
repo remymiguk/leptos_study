@@ -1,5 +1,3 @@
-use crate::{models::table_model::Product, repositories::product::BufferProductRepositoryProvider};
-
 use super::{
     error::AppError,
     pagination::{Limit, Offset},

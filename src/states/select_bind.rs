@@ -1,21 +1,21 @@
 use crate::states::form_object::FormObject;
 use crate::states::object::Object;
 use leptos::*;
-use voxi_core::{IntoValue, IntoValueType, Value, ValueType};
+use voxi_core::{IntoValue, IntoValueType};
 
 #[derive(Clone, PartialEq, Eq, Debug)]
-pub struct SelectOption<T: IntoValue + Clone> {
+pub struct SelectOption<T: IntoValue + Clone + std::fmt::Display> {
     value: T,
     literal: String,
 }
 
-pub trait IntoSelectOption<T: IntoValue + Clone> {
+pub trait IntoSelectOption<T: IntoValue + Clone + std::fmt::Display> {
     fn into_select_option(self) -> SelectOption<T>;
 }
 
 impl<T> IntoSelectOption<T> for (T, &str)
 where
-    T: IntoValue + Clone,
+    T: IntoValue + Clone + std::fmt::Display,
 {
     fn into_select_option(self) -> SelectOption<T> {
         SelectOption {
@@ -26,17 +26,17 @@ where
 }
 
 #[derive(Clone, PartialEq, Eq, Debug)]
-pub struct SelectOptions<T: IntoValue + Clone> {
+pub struct SelectOptions<T: IntoValue + Clone + std::fmt::Display> {
     options: Vec<SelectOption<T>>,
 }
 
-pub trait IntoSelectOptions<T: IntoValue + Clone> {
+pub trait IntoSelectOptions<T: IntoValue + Clone + std::fmt::Display> {
     fn into_select_options(self) -> SelectOptions<T>;
 }
 
 impl<V, T> IntoSelectOptions<V> for Vec<T>
 where
-    V: IntoValue + Clone,
+    V: IntoValue + Clone + std::fmt::Display,
     T: IntoSelectOption<V>,
 {
     fn into_select_options(self) -> SelectOptions<V> {
@@ -58,7 +58,7 @@ pub fn SelectBind<T, V, 'a>(
 ) -> impl IntoView
 where
     T: Object,
-    V: IntoValue + Clone + 'static,
+    V: IntoValue + Clone + std::fmt::Display + 'static,
 {
     let value_type = options
         .options
@@ -70,7 +70,8 @@ where
 
     let onchange = fo.on_change_to_map(field_name.clone(), value_type);
 
-    let value = fo.memo_content(cx, field_name.clone(), value_type)().1;
+    let current_value = fo.memo_content(cx, field_name.clone(), value_type)().1;
+    let current_value_s = current_value.map(|v| v.to_string()).unwrap_or_default();
 
     // let checked = move || value().0 == "true";
 
@@ -99,13 +100,12 @@ where
     let options = options
         .options
         .into_iter()
-        .map(|o| {
-            let ov = o.value.into_value();
-            let selected = Some(&ov) == value.as_ref();
-            let v = ov.to_string();
+        .map(|o| (o.value.to_string(), o.literal))
+        .map(|(value_s, literal)| {
+            let selected = value_s == current_value_s;
             view! {
                 cx,
-                <option value={v} selected={selected}>{ o.literal }</option>
+                <option value=value_s selected=selected>{ literal }</option>
             }
         })
         .collect::<Vec<_>>();
@@ -113,7 +113,7 @@ where
     let select = view! {
         cx,
         <div class="select is-success">
-            <select on:change={onchange}>
+            <select on:change=onchange>
                 { options }
             </select>
         </div>

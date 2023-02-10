@@ -1,4 +1,4 @@
-use rust_decimal::{Decimal, RoundingStrategy};
+use rust_decimal::Decimal;
 
 pub fn fix_scale(mut num: Decimal, digits: u32) -> Decimal {
     num.rescale(digits);

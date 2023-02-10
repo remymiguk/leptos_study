@@ -42,8 +42,8 @@ where
         cx,
         <div>
             <nav class="pagination" role="navigation" aria-label="pagination">
-            <a class="pagination-previous" disabled={previous_disabled} on:click=on_click_previous>"Previous"</a>
-            <a class="pagination-next" disabled={next_disabled} on:click=on_click_next>"Next page"
+            <a class="pagination-previous" disabled=previous_disabled on:click=on_click_previous>"Previous"</a>
+            <a class="pagination-next" disabled=next_disabled on:click=on_click_next>"Next page"
             </a>
             <ul class="pagination-list">
                 {lis}
@@ -87,7 +87,7 @@ where
     view! {
         cx,
         <li>
-            <a class=classes aria-label={aria_label} aria-current={aria_current}
+            <a class=classes aria-label=aria_label aria-current=aria_current
                 on:click=on_click
             >{number}</a>
         </li>

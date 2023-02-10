@@ -278,26 +278,26 @@ fn object_to_map_comp<T: Serialize>(object: &T) -> ComponentMap {
     ComponentMap::new(components_data)
 }
 
-fn map_reader_to_json(hash_map: &HashMap<String, Memo<serde_json::Value>>) -> serde_json::Value {
-    let mut object_j = json!({});
-    let map_j = object_j.as_object_mut().unwrap();
-    for (field_name, value) in hash_map {
-        map_j.insert(field_name.clone(), value());
-    }
-    object_j
-}
+// fn map_reader_to_json(hash_map: &HashMap<String, Memo<serde_json::Value>>) -> serde_json::Value {
+//     let mut object_j = json!({});
+//     let map_j = object_j.as_object_mut().unwrap();
+//     for (field_name, value) in hash_map {
+//         map_j.insert(field_name.clone(), value());
+//     }
+//     object_j
+// }
 
-async fn exec_validators_map(
-    hash_map: &HashMap<String, Memo<serde_json::Value>>,
-    validator: Box<dyn ValidatorProvider + 'static + Send + Sync>,
-) {
-    let object_j = map_reader_to_json(&hash_map);
-    let request = validator.create_request(&object_j);
-    let result = validator.validate(request).await.unwrap();
-    todo!()
+// async fn exec_validators_map(
+//     hash_map: &HashMap<String, Memo<serde_json::Value>>,
+//     validator: Box<dyn ValidatorProvider + 'static + Send + Sync>,
+// ) {
+//     let object_j = map_reader_to_json(&hash_map);
+//     let request = validator.create_request(&object_j);
+//     let result = validator.validate(request).await.unwrap();
+//     todo!()
 
-    // complete with function below
-}
+//     // complete with function below
+// }
 
 async fn exec_validators<T: Object>(
     validators: Vec<Box<dyn ValidatorProvider + 'static + Send + Sync>>,

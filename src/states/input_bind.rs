@@ -66,7 +66,7 @@ where
     input_attributes.autocomplete = input_attributes.autocomplete.or(autocomplete);
     let validator = input_attributes.validator.clone();
 
-    let input_ref = NodeRef::<HtmlElement<Input>>::new(cx);
+    let input_ref = NodeRef::<Input>::new(cx);
 
     let content_signal = fo.memo_content(cx, field_name.clone(), value_type);
     let content_s = move || {
@@ -125,12 +125,12 @@ where
         <div class="field">
             <label class="label">{literal}</label>
             <div class={classes_div}>
-                <input class={classes_input} type={input_type}
+                <input class={classes_input} type=input_type
                     _ref={input_ref}
-                    {readonly} {disabled} {required} placeholder={input_attributes.placeholder}
-                    inputmode={inputmode} {autofocus} {multiple} size={input_attributes.size} maxlength={input_attributes.maxlength}
-                    min={min} max={max} pattern={input_attributes.pattern} width={input_attributes.width} height={input_attributes.height} step={step}
-                    autocomplete={input_attributes.autocomplete}
+                    {readonly} {disabled} {required} placeholder=input_attributes.placeholder
+                    inputmode={inputmode} {autofocus} {multiple} size=input_attributes.size maxlength=input_attributes.maxlength
+                    min=min max=max pattern=input_attributes.pattern width=input_attributes.width height=input_attributes.height step=step
+                    autocomplete=input_attributes.autocomplete
                     on:input=on_input
                     prop:value=content_s
                 />

@@ -68,7 +68,7 @@ pub fn LoadedProducts(cx: Scope, products: Vec<Product>, count: usize) -> impl I
             <For
                 each=move || products.clone()
                 key=|product| product.id
-                view=move |product: Product| {
+                view=move |cx, product: Product| {
                     view! { cx,
                         <ProductRow product/>
                     }

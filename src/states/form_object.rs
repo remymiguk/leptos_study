@@ -130,7 +130,7 @@ impl<T: Object> FormObject<T> {
         &self,
         field_name: String,
         value_type: ValueType,
-        input_ref: NodeRef<HtmlElement<Input>>,
+        input_ref: NodeRef<Input>,
         validator: Option<Box<dyn InputValidator>>,
     ) -> impl Fn(Event) {
         let read_signal = self.object_read_signal;
