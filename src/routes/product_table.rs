@@ -4,7 +4,6 @@ use crate::models::table_model::Product;
 use crate::models::table_model::TableModel;
 use crate::states::app_state::read_global_state;
 use leptos::*;
-use leptos_router::*;
 
 #[component]
 pub fn ProductTable(cx: Scope) -> impl IntoView {
@@ -49,9 +48,9 @@ pub fn ProductTable(cx: Scope) -> impl IntoView {
         cx,
         <HoldOn
             read=list_reader
-            fallback=move ||view! { cx, "Loading..." }.into_view(cx)
-            error=move ||view! { cx, <div class="item-view">"Error loading this product."</div> }.into_view(cx)
-            child=move |(products, count)| view! {
+            fallback=move |cx|view! { cx, "Loading..." }.into_view(cx)
+            error=move |cx|view! { cx, <div class="item-view">"Error loading this product."</div> }.into_view(cx)
+            child=move |cx, (products, count)| view! {
                 cx,
                 <LoadedProducts products count/>
                 <Pagination max=max_page() current=page_read() on_page_click/>
@@ -65,15 +64,7 @@ pub fn LoadedProducts(cx: Scope, products: Vec<Product>, count: usize) -> impl I
     view! { cx,
         <h3 class="title is-4">{ format!("Products list {count}") }</h3>
         <ul>
-            <For
-                each=move || products.clone()
-                key=|product| product.id
-                view=move |cx, product: Product| {
-                    view! { cx,
-                        <ProductRow product/>
-                    }
-                }
-            />
+            {products.into_iter().map(|product|view! { cx, <ProductRow product/>}).collect::<Vec<_>>()}
         </ul>
     }
 }
@@ -83,9 +74,9 @@ pub fn ProductRow(cx: Scope, product: Product) -> impl IntoView {
     view! {
         cx,
         <div>
-            <A href=format!("/product/{}", product.id)>
-                { product.description.clone() }
-            </A>
+            <a href=format!("/product/{}", product.id)>
+                { product.description }
+            </a>
         </div>
     }
 }

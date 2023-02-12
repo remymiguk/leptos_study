@@ -131,10 +131,3 @@ where
     info!("not found repository, len {}", repos.len());
     None
 }
-
-#[test]
-pub fn test() {
-    add_repository_provider(BufferProductRepositoryProvider::new()); //
-    let repository = get_repository::<Product>();
-    println!("{repository:?}");
-}

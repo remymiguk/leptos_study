@@ -7,10 +7,12 @@ edition = "2021"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
+gloo-timers = "0.2"
 
 downcast-rs = "1.2.0"
 
-voxi-core = { path = "../voxi-core", default-features = false, features = ["objects"]}
+voxi-core = { path = "../voxi-core"} # , default-features = false, features = ["objects"]
+voxi-dataset = { path = "../voxi-dataset"}
 
 email_address = "0.2.4"
 derive_builder = "0.12"

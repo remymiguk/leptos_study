@@ -1,16 +1,18 @@
 
 // block decimal value
 // https://stackoverflow.com/questions/34057595/allow-2-decimal-places-in-input-type-number
-✔ Block user typing decimal @done(23-02-09 00:51)
 
-☐ Icon in Inputs
-- Components:
-☐ Checkbox (almost done)
-☐ Select/combo
-☐ Text area
-☐ Label
-☐ Validator "block" user content (try with truncate)
+☐ 
+
+☐ Icons in Inputs/Checkbox/Combo
+☐ Text area Components
+☐ Label Components
 ☐ Create button Ok/Cancel with confirmation message
-    ☐ <ButtonBind text="Ok" confirmation={Confirmation::new(cx, nmove||xxx)}>
-☐ Change caret position
-    https://stackoverflow.com/questions/512528/set-keyboard-caret-position-in-html-textbox
+☐ <ButtonBind text="Ok" confirmation={Confirmation::new(cx, nmove||xxx)}>
+
+✔ Checkbox @done(23-02-10 18:35)
+✔ Select/combo @done(23-02-10 18:35)
+https://stackoverflow.com/questions/512528/set-keyboard-caret-position-in-html-textbox
+✔ Block user typing decimal @done(23-02-09 00:51)
+✔ Validator "block" user content (try with truncate) @done(23-02-10 18:35)
+✔ Change caret position @done(23-02-10 18:35)

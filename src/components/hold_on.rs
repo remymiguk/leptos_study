@@ -43,17 +43,17 @@ pub fn HoldOn<T, V, R, F, E, C>(
 ) -> impl IntoView
 where
     R: Fn() -> Option<Option<T>> + 'static,
-    F: Fn() -> V + 'static,
-    E: Fn() -> V + 'static,
-    C: Fn(T) -> V + 'static,
+    F: Fn(Scope) -> V + 'static,
+    E: Fn(Scope) -> V + 'static,
+    C: Fn(Scope, T) -> V + 'static,
     V: IntoView,
 {
     move || match read() {
         Some(result) => match result {
-            Some(payload) => child(payload).into_view(cx),
-            None => error().into_view(cx),
+            Some(payload) => child(cx, payload).into_view(cx),
+            None => error(cx).into_view(cx),
         },
-        None => fallback().into_view(cx),
+        None => fallback(cx).into_view(cx),
     }
 }
 
@@ -93,9 +93,9 @@ where
     I: Clone + 'static,
     T: Clone + 'static,
     R: Fn() -> Resource<I, Option<T>> + 'static,
-    F: Fn() -> V + 'static,
-    E: Fn() -> V + 'static,
-    C: Fn(T) -> V + 'static,
+    F: Fn(Scope) -> V + 'static,
+    E: Fn(Scope) -> V + 'static,
+    C: Fn(Scope, T) -> V + 'static,
     V: IntoView,
 {
     move || match {
@@ -103,10 +103,10 @@ where
         (res.loading()(), res.read())
     } {
         (false, Some(result)) => match result {
-            Some(payload) => child(payload).into_view(cx),
-            None => error().into_view(cx),
+            Some(payload) => child(cx, payload).into_view(cx),
+            None => error(cx).into_view(cx),
         },
-        _ => fallback().into_view(cx),
+        _ => fallback(cx).into_view(cx),
     }
 }
 

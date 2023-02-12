@@ -1,12 +1,11 @@
-use rust_decimal_macros::dec;
-use voxi_core::ValueType;
-
 use super::{
     input_attributes::InputAttributes,
     input_type::InputType,
     input_validator::DecimalValidator,
     input_value_type::{InputValueType, IntoInputValueType},
 };
+use rust_decimal_macros::dec;
+use voxi_core::ValueType;
 
 pub enum InputBindType {
     Uuid,

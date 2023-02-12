@@ -27,7 +27,38 @@ impl InputValidator for DecimalValidator {
                 return previous_input;
             }
         };
-        decimal.rescale(self.scale);
+        decimal.set_scale(self.scale).unwrap();
         decimal.to_string()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn decimal_validator_test() {
+        let validator = DecimalValidator::new(2);
+
+        assert_eq!(
+            validator.value(String::from(""), String::from("")),
+            String::from("")
+        );
+        assert_eq!(
+            validator.value(String::from("1"), String::from("1")),
+            String::from("0.01")
+        );
+        assert_eq!(
+            validator.value(String::from("0.012"), String::from("0.012")),
+            String::from("0.12")
+        );
+        assert_eq!(
+            validator.value(String::from("0.123"), String::from("0.123")),
+            String::from("1.23")
+        );
+        assert_eq!(
+            validator.value(String::from("123.45"), String::from("123.45")),
+            String::from("123.45")
+        );
     }
 }

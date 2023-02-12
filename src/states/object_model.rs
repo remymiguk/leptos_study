@@ -105,14 +105,14 @@ impl<T: Object> ObjectModelBuilder<T> {
 
 #[derive(Debug, Clone)]
 pub struct ObjectModel<T: Object> {
-    pub public_object_write: WriteSignal<T>,
-    pub public_component_read: Memo<(JsonMap<T>, ComponentMap)>,
-    pub public_object_read: Memo<T>,
+    pub object_write: WriteSignal<T>,
+    pub object_read: Memo<T>,
+    pub component_read: Memo<(JsonMap<T>, ComponentMap)>,
 }
 
 impl<T: Object> ObjectModel<T> {
     pub fn signal(&self) -> (Memo<T>, WriteSignal<T>) {
-        (self.public_object_read, self.public_object_write)
+        (self.object_read, self.object_write)
     }
 
     pub fn new(cx: Scope, object: T, validators: impl Into<Validators>) -> Self {
@@ -261,9 +261,9 @@ impl<T: Object> ObjectModel<T> {
         });
 
         Self {
-            public_object_write: public_object_writer,
-            public_component_read: public_component_reader,
-            public_object_read: public_object_reader,
+            object_write: public_object_writer,
+            component_read: public_component_reader,
+            object_read: public_object_reader,
         }
     }
 }
@@ -315,7 +315,7 @@ async fn exec_validators<T: Object>(
     for field_diff_name in &fields_diff {
         let field_value = json_map
             .object()
-            .get(&field_diff_name)
+            .get(field_diff_name)
             .cloned()
             .unwrap_or(().into());
         components_data.insert(field_diff_name.clone(), field_value.into());
@@ -324,7 +324,7 @@ async fn exec_validators<T: Object>(
     // Iterate thru changed fields
     for field_diff_name in &fields_diff {
         // Get validators from each field name
-        let validators = validators_by_field(validators.clone(), &field_diff_name);
+        let validators = validators_by_field(validators.clone(), field_diff_name);
 
         for validator in validators {
             info!("found validator for {field_diff_name:?}!");
