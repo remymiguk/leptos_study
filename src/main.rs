@@ -1,4 +1,8 @@
+pub mod app;
 pub mod utils;
+
+#[cfg(not(feature = "ssr"))]
+pub mod services;
 
 #[cfg(feature = "ssr")]
 #[tokio::main]
@@ -29,7 +33,6 @@ async fn main() {
         .route("/favicon.ico", get(file_and_error_handler))
         .route("/api/domain", patch(reader))
         .route("/api/update", patch(writer))
-
         .leptos_routes(leptos_options.clone(), routes, |cx| view! { cx, <App/> })
         .fallback(file_and_error_handler)
         .layer(Extension(Arc::new(leptos_options)));
@@ -44,22 +47,21 @@ async fn main() {
 }
 
 #[cfg(feature = "ssr")]
-use voxi_dataset::domain::reader_request::ReaderRequest;
-#[cfg(feature = "ssr")]
-use voxi_dataset::domain::reader_response::ReaderResponse;
-#[cfg(feature = "ssr")]
-use voxi_dataset::writer::writer_request::WriterRequest;
-#[cfg(feature = "ssr")]
 use axum::Json;
 #[cfg(feature = "ssr")]
 use voxi_dataset::domain::domain_data_set_factory::reader_response_by_request;
 #[cfg(feature = "ssr")]
 use voxi_dataset::domain::domain_data_set_factory::write_response_by_request;
+#[cfg(feature = "ssr")]
+use voxi_dataset::domain::reader_request::ReaderRequest;
+#[cfg(feature = "ssr")]
+use voxi_dataset::domain::reader_response::ReaderResponse;
+#[cfg(feature = "ssr")]
+use voxi_dataset::writer::writer_request::WriterRequest;
 
 #[cfg(feature = "ssr")]
 #[axum::debug_handler]
 async fn reader(Json(request): Json<ReaderRequest>) -> Json<ReaderResponse> {
-
     // tracing::debug!(
     //     "domain request: {}",
     //     serde_json::to_string(&request).unwrap()
@@ -82,9 +84,10 @@ async fn writer(Json(payload): Json<WriterRequest>) -> Json<ReaderResponse> {
     Json(response)
 }
 
-// client-only stuff for Trunk
+// frontend stuff for Trunk
 #[cfg(not(feature = "ssr"))]
 pub fn main() {
+    use crate::services::api_domain_factory::initialization;
     use leptos::*;
     use leptos_study::app::repository::*;
     use leptos_study::repositories::product::*;
@@ -92,6 +95,8 @@ pub fn main() {
 
     _ = console_log::init_with_level(log::Level::Info);
     console_error_panic_hook::set_once();
+
+    initialization();
 
     add_repository_provider(BufferProductRepositoryProvider::new()); // ApiProductRepository
 

@@ -6,6 +6,7 @@ pub mod handlers;
 pub mod models;
 pub mod repositories;
 pub mod routes;
+pub mod services;
 pub mod states;
 pub mod utils;
 
@@ -17,10 +18,13 @@ pub fn hydrate() {
     use crate::app::repository::*;
     use crate::repositories::product::*;
     use crate::routes::app::*;
+    use crate::services::api_domain_factory::initialization;
     use leptos::view;
 
     _ = console_log::init_with_level(log::Level::Debug);
     console_error_panic_hook::set_once();
+
+    initialization();
 
     add_repository_provider(BufferProductRepositoryProvider::new()); // ApiProductRepository
 
